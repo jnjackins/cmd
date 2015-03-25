@@ -1,100 +1,134 @@
 
 state 0
-	$accept: .line $end 
+	$accept: .top $end 
 
-	WORD  shift 5
+	WORD  shift 6
 	'\n'  shift 2
 	.  error
 
-	args  goto 4
-	cmd  goto 3
-	line  goto 1
+	args  goto 5
+	cmd  goto 4
+	line  goto 3
+	top  goto 1
 
 state 1
-	$accept:  line.$end 
+	$accept:  top.$end 
 
 	$end  accept
 	.  error
 
 
 state 2
-	line:  '\n'.    (1)
+	top:  '\n'.    (1)
 
-	.  reduce 1 (src line 20)
+	.  reduce 1 (src line 22)
 
 
 state 3
-	line:  cmd.'\n' 
-	cmd:  cmd.'>' WORD 
-	cmd:  cmd.'<' WORD 
+	top:  line.    (2)
 
-	'\n'  shift 6
-	'>'  shift 7
-	'<'  shift 8
-	.  error
+	.  reduce 2 (src line 23)
 
 
 state 4
-	cmd:  args.    (3)
-	args:  args.WORD 
+	line:  cmd.'\n' 
+	line:  cmd.';' '\n' 
+	line:  cmd.';' line 
+	cmd:  cmd.'>' WORD 
+	cmd:  cmd.'<' WORD 
 
-	WORD  shift 9
-	.  reduce 3 (src line 23)
+	'\n'  shift 7
+	';'  shift 8
+	'>'  shift 9
+	'<'  shift 10
+	.  error
 
 
 state 5
-	args:  WORD.    (6)
+	cmd:  args.    (6)
+	args:  args.WORD 
 
-	.  reduce 6 (src line 27)
+	WORD  shift 11
+	.  reduce 6 (src line 29)
 
 
 state 6
-	line:  cmd '\n'.    (2)
+	args:  WORD.    (9)
 
-	.  reduce 2 (src line 21)
+	.  reduce 9 (src line 33)
 
 
 state 7
-	cmd:  cmd '>'.WORD 
+	line:  cmd '\n'.    (3)
 
-	WORD  shift 10
-	.  error
+	.  reduce 3 (src line 25)
 
 
 state 8
-	cmd:  cmd '<'.WORD 
+	line:  cmd ';'.'\n' 
+	line:  cmd ';'.line 
 
-	WORD  shift 11
+	WORD  shift 6
+	'\n'  shift 12
+	.  error
+
+	args  goto 5
+	cmd  goto 4
+	line  goto 13
+
+state 9
+	cmd:  cmd '>'.WORD 
+
+	WORD  shift 14
 	.  error
 
 
-state 9
-	args:  args WORD.    (7)
-
-	.  reduce 7 (src line 28)
-
-
 state 10
-	cmd:  cmd '>' WORD.    (4)
+	cmd:  cmd '<'.WORD 
 
-	.  reduce 4 (src line 24)
+	WORD  shift 15
+	.  error
 
 
 state 11
-	cmd:  cmd '<' WORD.    (5)
+	args:  args WORD.    (10)
 
-	.  reduce 5 (src line 25)
+	.  reduce 10 (src line 34)
 
 
-7 terminals, 4 nonterminals
-8 grammar rules, 12/2000 states
+state 12
+	line:  cmd ';' '\n'.    (4)
+
+	.  reduce 4 (src line 26)
+
+
+state 13
+	line:  cmd ';' line.    (5)
+
+	.  reduce 5 (src line 27)
+
+
+state 14
+	cmd:  cmd '>' WORD.    (7)
+
+	.  reduce 7 (src line 30)
+
+
+state 15
+	cmd:  cmd '<' WORD.    (8)
+
+	.  reduce 8 (src line 31)
+
+
+8 terminals, 5 nonterminals
+11 grammar rules, 16/2000 states
 0 shift/reduce, 0 reduce/reduce conflicts reported
-53 working sets used
-memory: parser 2/30000
+54 working sets used
+memory: parser 6/30000
 0 extra closures
-8 shift entries, 1 exceptions
-3 goto entries
-0 entries saved by goto default
-Optimizer space used: output 11/30000
-11 table entries, 0 zero
-maximum spread: 7, maximum offset: 5
+11 shift entries, 1 exceptions
+5 goto entries
+2 entries saved by goto default
+Optimizer space used: output 16/30000
+16 table entries, 0 zero
+maximum spread: 8, maximum offset: 8

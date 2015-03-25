@@ -4,9 +4,11 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
 )
@@ -14,17 +16,24 @@ import (
 func main() {
 	log.SetPrefix("sh: ")
 	log.SetFlags(0)
+	interrupt := make(chan os.Signal)
+	go func() {
+		for {
+			_ = <-interrupt
+			fmt.Println()
+			fmt.Print(os.Getenv("PS1"))
+		}
+	}()
+	signal.Notify(interrupt, os.Interrupt)
 	in := bufio.NewReader(os.Stdin)
 	for {
-		if _, err := os.Stdout.WriteString(os.Getenv("PS1")); err != nil {
-			log.Fatalf("WriteString: %s", err)
-		}
+		fmt.Print(os.Getenv("PS1"))
 		line, err := in.ReadString('\n')
 		if err == io.EOF {
 			return
 		}
 		if err != nil {
-			log.Fatalf("ReadBytes: %s", err)
+			log.Fatal(err)
 		}
 		shParse(&shLex{line: expand(line)})
 	}

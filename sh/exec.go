@@ -49,7 +49,7 @@ func run(cmd cmd) {
 	runner.Stderr = os.Stderr
 	err := runner.Run()
 	if err != nil {
-		log.Printf("Run: %s", err)
+		log.Print(err)
 	}
 }
 
@@ -62,7 +62,7 @@ func cdBuiltin(args []string) {
 	}
 	err := os.Chdir(dest)
 	if err != nil {
-		log.Printf("Chdir: %s", err)
+		log.Print(err)
 	}
 }
 
@@ -72,10 +72,10 @@ func execBuiltin(args []string) {
 	}
 	cmd, err := exec.LookPath(args[1])
 	if err != nil {
-		log.Printf("LookPath: %s", err)
+		log.Print(err)
 	}
 	err = syscall.Exec(cmd, args[1:], os.Environ())
 	if err != nil {
-		log.Printf("Exec: %s", err)
+		log.Print(err)
 	}
 }
