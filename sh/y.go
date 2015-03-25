@@ -4,23 +4,12 @@ package main
 import __yyfmt__ "fmt"
 
 //line sh.y:3
-const (
-	normal = iota
-	subshell
-)
-
-type expr struct {
-	kind int
-	args []string
-}
-
-//line sh.y:17
+//line sh.y:7
 type shSymType struct {
 	yys   int
 	word  string
 	words []string
-	expr  expr
-	exprs []expr
+	cmd   cmd
 }
 
 const WORD = 57346
@@ -34,19 +23,7 @@ const shEofCode = 1
 const shErrCode = 2
 const shMaxDepth = 200
 
-//line sh.y:47
-
-func doline(exprs []expr) {
-	for _, expr := range exprs {
-		switch expr.kind {
-		case normal:
-			run(expr.args)
-		case subshell:
-			// TODO
-			run(expr.args)
-		}
-	}
-}
+//line sh.y:30
 
 //line yacctab:1
 var shExca = []int{
@@ -55,45 +32,45 @@ var shExca = []int{
 	-2, 0,
 }
 
-const shNprod = 10
+const shNprod = 8
 const shPrivate = 57344
 
 var shTokenNames []string
 var shStates []string
 
-const shLast = 18
+const shLast = 11
 
 var shAct = []int{
 
-	6, 3, 7, 12, 7, 10, 14, 5, 8, 9,
-	4, 13, 10, 15, 7, 1, 11, 2,
+	6, 7, 8, 5, 2, 11, 10, 9, 1, 3,
+	4,
 }
 var shPact = []int{
 
-	0, -1000, 3, -1000, 10, 10, -6, -1000, -1000, 0,
-	-6, -2, 9, -1000, -1000, -1000,
+	-1, -1000, -1000, -5, 3, -1000, -1000, 2, 1, -1000,
+	-1000, -1000,
 }
 var shPgo = []int{
 
-	0, 0, 10, 1, 17, 15,
+	0, 10, 9, 8,
 }
 var shR1 = []int{
 
-	0, 5, 4, 4, 3, 3, 2, 2, 1, 1,
+	0, 3, 3, 2, 2, 2, 1, 1,
 }
 var shR2 = []int{
 
-	0, 2, 1, 3, 1, 3, 1, 2, 1, 3,
+	0, 1, 2, 1, 3, 3, 1, 2,
 }
 var shChk = []int{
 
-	-1000, -5, -4, -3, -2, 7, -1, 4, 5, 6,
-	-1, -2, 9, -3, 8, 4,
+	-1000, -3, 5, -2, -1, 4, 5, 6, 7, 4,
+	4, 4,
 }
 var shDef = []int{
 
-	0, -2, 0, 2, 4, 0, 6, 8, 1, 0,
-	7, 0, 0, 3, 5, 9,
+	0, -2, 1, 0, 3, 6, 2, 0, 0, 7,
+	4, 5,
 }
 var shTok1 = []int{
 
@@ -101,12 +78,9 @@ var shTok1 = []int{
 	5, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	7, 8, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 6,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 9,
+	7, 3, 6,
 }
 var shTok2 = []int{
 
@@ -382,57 +356,41 @@ shdefault:
 	// dummy call; replaced with literal code
 	switch shnt {
 
-	case 1:
-		shDollar = shS[shpt-2 : shpt+1]
-		//line sh.y:33
-		{
-			doline(shDollar[1].exprs)
-		}
 	case 2:
-		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:35
+		shDollar = shS[shpt-2 : shpt+1]
+		//line sh.y:21
 		{
-			shVAL.exprs = []expr{shDollar[1].expr}
+			run(shDollar[1].cmd)
 		}
 	case 3:
-		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:36
+		shDollar = shS[shpt-1 : shpt+1]
+		//line sh.y:23
 		{
-			shVAL.exprs = append(shDollar[1].exprs, shDollar[3].expr)
+			shVAL.cmd.args = shDollar[1].words
 		}
 	case 4:
-		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:38
+		shDollar = shS[shpt-3 : shpt+1]
+		//line sh.y:24
 		{
-			shVAL.expr.kind = normal
-			shVAL.expr.args = shDollar[1].words
+			shVAL.cmd.stdout = shDollar[3].word
 		}
 	case 5:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:39
+		//line sh.y:25
 		{
-			shVAL.expr.kind = subshell
-			shVAL.expr.args = shDollar[2].words
+			shVAL.cmd.stdin = shDollar[3].word
 		}
 	case 6:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:41
+		//line sh.y:27
 		{
 			shVAL.words = []string{shDollar[1].word}
 		}
 	case 7:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line sh.y:42
+		//line sh.y:28
 		{
 			shVAL.words = append(shDollar[1].words, shDollar[2].word)
-		}
-	case 8:
-		shVAL.word = shS[shpt-0].word
-	case 9:
-		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:45
-		{
-			shVAL.word = shDollar[1].word + shDollar[3].word
 		}
 	}
 	goto shstack /* stack new state and value */

@@ -32,6 +32,9 @@ func main() {
 
 func expand(cmd string) string {
 	args := strings.Fields(cmd)
+	if len(args) == 0 {
+		return "\n"
+	}
 	var params string
 	for _, arg := range args[1:] {
 		deglobbed, err := filepath.Glob(arg)

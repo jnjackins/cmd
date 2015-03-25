@@ -2,14 +2,12 @@
 state 0
 	$accept: .line $end 
 
-	WORD  shift 7
-	'('  shift 5
+	WORD  shift 5
+	'\n'  shift 2
 	.  error
 
-	word  goto 6
-	cmd  goto 4
-	expr  goto 3
-	exprs  goto 2
+	args  goto 4
+	cmd  goto 3
 	line  goto 1
 
 state 1
@@ -20,121 +18,83 @@ state 1
 
 
 state 2
-	line:  exprs.'\n' 
-	exprs:  exprs.';' expr 
+	line:  '\n'.    (1)
 
-	'\n'  shift 8
-	';'  shift 9
-	.  error
+	.  reduce 1 (src line 20)
 
 
 state 3
-	exprs:  expr.    (2)
+	line:  cmd.'\n' 
+	cmd:  cmd.'>' WORD 
+	cmd:  cmd.'<' WORD 
 
-	.  reduce 2 (src line 35)
+	'\n'  shift 6
+	'>'  shift 7
+	'<'  shift 8
+	.  error
 
 
 state 4
-	expr:  cmd.    (4)
-	cmd:  cmd.word 
+	cmd:  args.    (3)
+	args:  args.WORD 
 
-	WORD  shift 7
-	.  reduce 4 (src line 38)
+	WORD  shift 9
+	.  reduce 3 (src line 23)
 
-	word  goto 10
 
 state 5
-	expr:  '('.cmd ')' 
+	args:  WORD.    (6)
 
-	WORD  shift 7
-	.  error
+	.  reduce 6 (src line 27)
 
-	word  goto 6
-	cmd  goto 11
 
 state 6
-	cmd:  word.    (6)
-	word:  word.'^' WORD 
+	line:  cmd '\n'.    (2)
 
-	'^'  shift 12
-	.  reduce 6 (src line 41)
+	.  reduce 2 (src line 21)
 
 
 state 7
-	word:  WORD.    (8)
+	cmd:  cmd '>'.WORD 
 
-	.  reduce 8 (src line 44)
+	WORD  shift 10
+	.  error
 
 
 state 8
-	line:  exprs '\n'.    (1)
+	cmd:  cmd '<'.WORD 
 
-	.  reduce 1 (src line 33)
+	WORD  shift 11
+	.  error
 
 
 state 9
-	exprs:  exprs ';'.expr 
+	args:  args WORD.    (7)
 
-	WORD  shift 7
-	'('  shift 5
-	.  error
+	.  reduce 7 (src line 28)
 
-	word  goto 6
-	cmd  goto 4
-	expr  goto 13
 
 state 10
-	cmd:  cmd word.    (7)
-	word:  word.'^' WORD 
+	cmd:  cmd '>' WORD.    (4)
 
-	'^'  shift 12
-	.  reduce 7 (src line 42)
+	.  reduce 4 (src line 24)
 
 
 state 11
-	expr:  '(' cmd.')' 
-	cmd:  cmd.word 
+	cmd:  cmd '<' WORD.    (5)
 
-	WORD  shift 7
-	')'  shift 14
-	.  error
-
-	word  goto 10
-
-state 12
-	word:  word '^'.WORD 
-
-	WORD  shift 15
-	.  error
+	.  reduce 5 (src line 25)
 
 
-state 13
-	exprs:  exprs ';' expr.    (3)
-
-	.  reduce 3 (src line 36)
-
-
-state 14
-	expr:  '(' cmd ')'.    (5)
-
-	.  reduce 5 (src line 39)
-
-
-state 15
-	word:  word '^' WORD.    (9)
-
-	.  reduce 9 (src line 45)
-
-
-9 terminals, 6 nonterminals
-10 grammar rules, 16/2000 states
+7 terminals, 4 nonterminals
+8 grammar rules, 12/2000 states
 0 shift/reduce, 0 reduce/reduce conflicts reported
-55 working sets used
-memory: parser 10/30000
-1 extra closures
-13 shift entries, 1 exceptions
-9 goto entries
-3 entries saved by goto default
-Optimizer space used: output 18/30000
-18 table entries, 0 zero
-maximum spread: 9, maximum offset: 11
+53 working sets used
+memory: parser 2/30000
+0 extra closures
+8 shift entries, 1 exceptions
+3 goto entries
+0 entries saved by goto default
+Optimizer space used: output 11/30000
+11 table entries, 0 zero
+maximum spread: 7, maximum offset: 5

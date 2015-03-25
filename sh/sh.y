@@ -2,58 +2,29 @@
 
 package main
 
-const (
-	normal = iota
-	subshell
-)
-
-type expr struct{
-	kind int
-	args []string
-}
-
 %}
 
 %union {
-	word    string
-	words   []string
-	expr    expr
-	exprs   []expr
+	word	string
+	words	[]string
+	cmd		cmd
 }
 
-%type <word>	word
-%type <words>	cmd
-%type <expr>	expr
-%type <exprs>	exprs
+%type <words>	args
+%type <cmd>		cmd
 
 %token <word> WORD
 
 %%
 
-line:	  exprs '\n'		{ doline($1) }
+line:	  '\n'
+		| cmd '\n'		{ run($1) }
 
-exprs:	  expr				{ $$ = []expr{$1} }
-		| exprs ';' expr	{ $$ = append($1, $3) }
+cmd:	  args			{ $$.args = $1 }
+		| cmd '>' WORD	{ $$.stdout = $3 }
+		| cmd '<' WORD	{ $$.stdin = $3 }
 
-expr:	  cmd				{ $$.kind = normal; $$.args = $1 }
-		| '(' cmd ')'		{ $$.kind = subshell; $$.args = $2 }
-	
-cmd:	  word				{ $$ = []string{$1} }
-		| cmd word			{ $$ = append($1, $2) }
-
-word :	  WORD
-		| word '^' WORD			{ $$ = $1 + $3 }
+args:	  WORD			{ $$ = []string{$1} }
+		| args WORD		{ $$ = append($1, $2) }
 
 %%
-
-func doline(exprs []expr) {
-	for _, expr := range exprs {
-		switch expr.kind {
-		case normal:
-			run(expr.args)
-		case subshell:
-			// TODO
-			run(expr.args)
-		}
-	}
-}
