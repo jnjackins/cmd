@@ -42,6 +42,7 @@ func doline(exprs []expr) {
 		case normal:
 			run(expr.args)
 		case subshell:
+			// TODO
 			run(expr.args)
 		}
 	}
