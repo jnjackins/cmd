@@ -47,6 +47,7 @@ func page(r io.Reader) {
 		i++
 		if i == *pagesize {
 			tty.ReadString('\n')
+			i = 0
 		} else {
 			fmt.Println()
 		}
