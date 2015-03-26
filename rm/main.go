@@ -10,7 +10,7 @@ import (
 var rflag = flag.Bool("r", false, "recursive")
 
 func main() {
-	logger := log.New(os.Stderr, "rm: ", 0)
+	elog := log.New(os.Stderr, "rm: ", 0)
 	flag.Parse()
 	if len(flag.Args()) == 0 {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] file ...\n", os.Args[0])
@@ -21,12 +21,12 @@ func main() {
 		if *rflag {
 			err := os.RemoveAll(path)
 			if err != nil {
-				logger.Print(err)
+				elog.Print(err)
 			}
 		} else {
 			err := os.Remove(path)
 			if err != nil {
-				logger.Print(err)
+				elog.Print(err)
 			}
 		}
 	}
