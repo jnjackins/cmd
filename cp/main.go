@@ -17,10 +17,14 @@ var usage = `Usage: cp source target
 
 func main() {
 	elog := log.New(os.Stderr, "cp: ", 0)
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, usage)
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 	args := flag.Args()
 	if len(args) < 2 {
-		fmt.Fprintln(os.Stderr, usage)
+		flag.Usage()
 		os.Exit(1)
 	}
 	if len(args) == 2 {

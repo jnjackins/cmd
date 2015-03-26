@@ -8,13 +8,13 @@ import (
 	"archive/tar"
 	"bufio"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
-
-	"sigint.ca/die"
 )
 
 func main() {
+	elog := log.New(os.Stderr, "tar: ", 0)
 	outbuf := bufio.NewWriter(os.Stdout)
 	defer outbuf.Flush()
 	w := tar.NewWriter(outbuf)
@@ -22,28 +22,32 @@ func main() {
 	for _, arg := range os.Args[1:] {
 		walkfunc := func(path string, info os.FileInfo, err error) error {
 			f, err := os.Open(path)
-			die.On(err, "tar: error opening file")
+			if err != nil {
+				elog.Fatal(err)
+			}
 			defer f.Close()
-
 			info, err = f.Stat()
-			die.On(err, "tar: error getting file info")
-
+			if err != nil {
+				elog.Fatal(err)
+			}
 			header, err := tar.FileInfoHeader(info, "")
-			die.On(err, "tar: error making header")
+			if err != nil {
+				elog.Fatal(err)
+			}
 			header.Name = path
-
-			err = w.WriteHeader(header)
-			die.On(err, "tar: error writing header")
-
+			if err := w.WriteHeader(header); err != nil {
+				elog.Fatal(err)
+			}
 			if info.Mode().IsRegular() {
 				fbuf := bufio.NewReader(f)
-				_, err = io.Copy(w, fbuf)
-				die.On(err, "tar: error copying file data to stdout")
+				if _, err = io.Copy(w, fbuf); err != nil {
+					elog.Fatal(err)
+				}
 			}
-
 			return nil
 		}
-		err := filepath.Walk(arg, walkfunc)
-		die.On(err, "tar: error walking tree at "+arg)
+		if err := filepath.Walk(arg, walkfunc); err != nil {
+			elog.Fatal(err)
+		}
 	}
 }

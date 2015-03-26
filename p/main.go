@@ -18,6 +18,10 @@ var (
 
 func main() {
 	elog := log.New(os.Stderr, "p: ", 0)
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: p [options] [file ...]")
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 	stdin = bufio.NewReader(os.Stdin)
 	f, err := os.Open("/dev/tty")

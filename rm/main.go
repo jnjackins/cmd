@@ -11,10 +11,13 @@ var rflag = flag.Bool("r", false, "recursive")
 
 func main() {
 	elog := log.New(os.Stderr, "rm: ", 0)
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: rm [options] file ...")
+		flag.PrintDefaults()
+	}
 	flag.Parse()
 	if len(flag.Args()) == 0 {
-		fmt.Fprintf(os.Stderr, "Usage: %s [options] file ...\n", os.Args[0])
-		flag.PrintDefaults()
+		flag.Usage()
 		os.Exit(1)
 	}
 	for _, path := range flag.Args() {

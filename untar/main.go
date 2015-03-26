@@ -8,34 +8,37 @@ import (
 	"archive/tar"
 	"bufio"
 	"io"
+	"log"
 	"os"
-
-	"sigint.ca/die"
 )
 
 func main() {
+	elog := log.New(os.Stderr, "untar: ", 0)
 	inbuf := bufio.NewReader(os.Stdin)
 	r := tar.NewReader(inbuf)
-
 	header, err := r.Next()
 	for err == nil {
 		info := header.FileInfo()
 		if info.IsDir() {
-			innerErr := os.Mkdir(header.Name, info.Mode())
-			die.On(innerErr, "untar: error creating directory")
+			if err := os.Mkdir(header.Name, info.Mode()); err != nil {
+				elog.Fatal(err)
+			}
 		} else {
-			f, innerErr := os.Create(header.Name)
-			die.On(innerErr, "untar: error creating file")
+			f, err := os.Create(header.Name)
+			if err != nil {
+				elog.Fatal(err)
+			}
 
 			fbuf := bufio.NewWriter(f)
-			_, innerErr = io.Copy(fbuf, r)
-			die.On(innerErr, "untar: error copying data")
+			if _, err = io.Copy(fbuf, r); err != nil {
+				log.Fatal(err)
+			}
 			fbuf.Flush()
 			f.Close()
 		}
 		header, err = r.Next()
 	}
 	if err != io.EOF {
-		die.On(err, "untar: error advancing to next entry")
+		log.Fatal(err)
 	}
 }

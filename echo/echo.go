@@ -1,17 +1,20 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"os"
 	"strings"
 )
 
-var nflag = flag.Bool("n", false, "omit trailing newline")
-
 func main() {
-	flag.Parse()
-	fmt.Print(strings.Join(flag.Args(), " "))
-	if !*nflag {
+	var nflag bool
+	args := os.Args
+	if len(args) > 1 && args[1] == "-n" {
+		nflag = true
+		args = args[1:]
+	}
+	fmt.Print(strings.Join(args[1:], " "))
+	if !nflag {
 		fmt.Println()
 	}
 }

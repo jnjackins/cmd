@@ -13,10 +13,13 @@ var usage = `Usage: mv source target
 
 func main() {
 	elog := log.New(os.Stderr, "mv: ", 0)
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, usage)
+	}
 	flag.Parse()
 	args := flag.Args()
 	if len(args) < 2 {
-		fmt.Fprintln(os.Stderr, usage)
+		flag.Usage()
 		os.Exit(1)
 	}
 	if len(args) == 2 {

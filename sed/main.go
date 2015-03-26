@@ -5,11 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"regexp"
 	"strings"
-
-	"sigint.ca/die"
 )
 
 var (
@@ -23,9 +22,13 @@ func init() {
 }
 
 func main() {
+	elog := log.New(os.Stderr, "sed: ", 0)
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: sed <command>")
+	}
 	flag.Parse()
 	if len(flag.Args()) != 1 {
-		fmt.Fprintln(os.Stderr, "Usage: sed <command>")
+		flag.Usage()
 		os.Exit(1)
 	}
 	cmd := flag.Arg(0)
@@ -34,8 +37,7 @@ func main() {
 		sep := cmd[1]
 		args := strings.Split(cmd, string(sep))
 		if len(args) != 4 {
-			fmt.Fprintln(os.Stderr, "sed: invalid substitution command")
-			os.Exit(1)
+			elog.Fatal("invalid substitution command")
 		}
 		args = args[1:]
 		var global bool
@@ -44,39 +46,43 @@ func main() {
 			global = true
 		case "":
 		default:
-			fmt.Fprintln(os.Stderr, "sed: invalid substitution flag")
+			elog.Fatalf("invalid substitution flag: %s", args[2])
 		}
 		from, to := args[0], args[1]
 		for {
 			line, err := in.ReadString('\n')
 			if err != nil {
 				if err != io.EOF {
-					die.On(err, "sed: error reading from stdio")
+					elog.Fatal(err)
 				}
 				break
 			}
-			sub(line, from, to, global)
+			if err := sub(line, from, to, global); err != nil {
+				elog.Fatal(err)
+			}
 		}
 		out.Flush()
 
 	default:
-		fmt.Fprintln(os.Stderr, "sed: unimplemented command: "+string(cmd[0]))
-		os.Exit(1)
+		elog.Fatalf("unimplemented command: %s", string(cmd[0]))
 	}
 }
 
-func sub(line, from, to string, global bool) {
+func sub(line, from, to string, global bool) error {
 	re, err := regexp.Compile(from)
-	die.On(err, "sed: error parsing pattern \""+from+"\"")
+	if err != nil {
+		return err
+	}
 	if global {
 		fmt.Fprint(out, re.ReplaceAllString(line, to))
 	} else {
 		indices := re.FindStringIndex(line)
 		if indices == nil {
 			fmt.Fprint(out, line)
-			return
+			return nil
 		}
 		i, j := indices[0], indices[1]
-		fmt.Fprint(out, line[:i] + to + line[j:])
+		fmt.Fprint(out, line[:i]+to+line[j:])
 	}
+	return nil
 }

@@ -4,19 +4,25 @@ import (
 	"bufio"
 	"compress/gzip"
 	"io"
+	"log"
 	"os"
-
-	"sigint.ca/die"
 )
 
 func main() {
+	elog := log.New(os.Stderr, "gzip: ", 0)
 	r := bufio.NewReader(os.Stdin)
 	outbuf := bufio.NewWriter(os.Stdout)
 	w := gzip.NewWriter(outbuf)
 	_, err := io.Copy(w, r)
-	die.On(err, "gzip: error copying compressed data to stdout")
+	if err != nil {
+		elog.Fatal(err)
+	}
 	err = w.Close()
-	die.On(err, "gzip: error closing gzip writer")
+	if err != nil {
+		elog.Fatal(err)
+	}
 	err = outbuf.Flush()
-	die.On(err, "gzip: error flushing stdout")
+	if err != nil {
+		elog.Fatal(err)
+	}
 }

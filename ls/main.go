@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"strconv"
 	"syscall"
 
-	"sigint.ca/die"
 	"sigint.ca/group"
 )
 
@@ -16,17 +16,16 @@ var (
 	longflag = flag.Bool("l", false, "List in long format")
 	sizeflag = flag.Bool("s", false, "Give size in KB for each entry")
 )
+
 var noargs bool
 
-func init() {
+func main() {
+	elog := log.New(os.Stderr, "ls: ", 0)
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [file ...]\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "Usage: ls [options] [file ...]")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-}
-
-func main() {
 	args := flag.Args()
 	if len(args) == 0 {
 		args = []string{"."}
@@ -37,9 +36,13 @@ func main() {
 			dir = dir[:len(dir)-1]
 		}
 		f, err := os.Open(dir)
-		die.On(err, "ls: error opening "+dir)
+		if err != nil {
+			elog.Fatal(err)
+		}
 		fi, err := f.Readdir(0)
-		die.On(err, "ls: error reading directory "+dir)
+		if err != nil {
+			elog.Fatal(err)
+		}
 		for i := range fi {
 			info := fi[i]
 			if *sizeflag {
