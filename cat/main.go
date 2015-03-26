@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"io"
 	"os"
 
@@ -9,16 +10,18 @@ import (
 )
 
 func main() {
-	outbuf := bufio.NewWriter(os.Stdout)
-	defer outbuf.Flush()
+	flag.Parse()
+	stdout := bufio.NewWriter(os.Stdout)
+	defer stdout.Flush()
 	if len(os.Args) == 1 {
-		os.Args = append(os.Args, "/dev/stdin")
+		io.Copy(stdout, bufio.NewReader(os.Stdin))
+		return
 	}
-	for _, fname := range os.Args[1:] {
+	for _, fname := range flag.Args() {
 		f, err := os.Open(fname)
 		die.On(err, "cat: error opening file")
 		fbuf := bufio.NewReader(f)
-		io.Copy(outbuf, fbuf)
+		io.Copy(stdout, fbuf)
 		f.Close()
 	}
 }
