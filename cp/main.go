@@ -76,10 +76,12 @@ func cp(from, to string) error {
 	if err != nil {
 		return err
 	}
+	defer source.Close()
 	dest, err := os.Create(to)
 	if err != nil {
 		return err
 	}
+	defer dest.Close()
 	r, w := bufio.NewReader(source), bufio.NewWriter(dest)
 	_, err = io.Copy(w, r)
 	return err
