@@ -2,12 +2,13 @@
 state 0
 	$accept: .top $end 
 
-	WORD  shift 6
+	WORD  shift 7
 	'\n'  shift 2
 	.  error
 
-	args  goto 5
-	cmd  goto 4
+	args  goto 6
+	cmd  goto 5
+	pipe  goto 4
 	line  goto 3
 	top  goto 1
 
@@ -21,114 +22,142 @@ state 1
 state 2
 	top:  '\n'.    (1)
 
-	.  reduce 1 (src line 22)
+	.  reduce 1 (src line 29)
 
 
 state 3
 	top:  line.    (2)
 
-	.  reduce 2 (src line 23)
+	.  reduce 2 (src line 30)
 
 
 state 4
-	line:  cmd.'\n' 
-	line:  cmd.';' '\n' 
-	line:  cmd.';' line 
-	cmd:  cmd.'>' WORD 
-	cmd:  cmd.'<' WORD 
+	line:  pipe.'\n' 
+	line:  pipe.';' '\n' 
+	line:  pipe.';' line 
+	pipe:  pipe.'|' cmd 
 
-	'\n'  shift 7
-	';'  shift 8
-	'>'  shift 9
-	'<'  shift 10
+	'\n'  shift 8
+	';'  shift 9
+	'|'  shift 10
 	.  error
 
 
 state 5
-	cmd:  args.    (6)
-	args:  args.WORD 
+	pipe:  cmd.    (6)
+	cmd:  cmd.'>' WORD 
+	cmd:  cmd.'<' WORD 
 
-	WORD  shift 11
-	.  reduce 6 (src line 29)
+	'>'  shift 11
+	'<'  shift 12
+	.  reduce 6 (src line 36)
 
 
 state 6
-	args:  WORD.    (9)
+	cmd:  args.    (8)
+	args:  args.WORD 
 
-	.  reduce 9 (src line 33)
+	WORD  shift 13
+	.  reduce 8 (src line 39)
 
 
 state 7
-	line:  cmd '\n'.    (3)
+	args:  WORD.    (11)
 
-	.  reduce 3 (src line 25)
+	.  reduce 11 (src line 43)
 
 
 state 8
-	line:  cmd ';'.'\n' 
-	line:  cmd ';'.line 
+	line:  pipe '\n'.    (3)
 
-	WORD  shift 6
-	'\n'  shift 12
-	.  error
+	.  reduce 3 (src line 32)
 
-	args  goto 5
-	cmd  goto 4
-	line  goto 13
 
 state 9
-	cmd:  cmd '>'.WORD 
+	line:  pipe ';'.'\n' 
+	line:  pipe ';'.line 
 
-	WORD  shift 14
+	WORD  shift 7
+	'\n'  shift 14
 	.  error
 
+	args  goto 6
+	cmd  goto 5
+	pipe  goto 4
+	line  goto 15
 
 state 10
-	cmd:  cmd '<'.WORD 
+	pipe:  pipe '|'.cmd 
 
-	WORD  shift 15
+	WORD  shift 7
 	.  error
 
+	args  goto 6
+	cmd  goto 16
 
 state 11
-	args:  args WORD.    (10)
+	cmd:  cmd '>'.WORD 
 
-	.  reduce 10 (src line 34)
+	WORD  shift 17
+	.  error
 
 
 state 12
-	line:  cmd ';' '\n'.    (4)
+	cmd:  cmd '<'.WORD 
 
-	.  reduce 4 (src line 26)
+	WORD  shift 18
+	.  error
 
 
 state 13
-	line:  cmd ';' line.    (5)
+	args:  args WORD.    (12)
 
-	.  reduce 5 (src line 27)
+	.  reduce 12 (src line 44)
 
 
 state 14
-	cmd:  cmd '>' WORD.    (7)
+	line:  pipe ';' '\n'.    (4)
 
-	.  reduce 7 (src line 30)
+	.  reduce 4 (src line 33)
 
 
 state 15
-	cmd:  cmd '<' WORD.    (8)
+	line:  pipe ';' line.    (5)
 
-	.  reduce 8 (src line 31)
+	.  reduce 5 (src line 34)
 
 
-8 terminals, 5 nonterminals
-11 grammar rules, 16/2000 states
+state 16
+	pipe:  pipe '|' cmd.    (7)
+	cmd:  cmd.'>' WORD 
+	cmd:  cmd.'<' WORD 
+
+	'>'  shift 11
+	'<'  shift 12
+	.  reduce 7 (src line 37)
+
+
+state 17
+	cmd:  cmd '>' WORD.    (9)
+
+	.  reduce 9 (src line 40)
+
+
+state 18
+	cmd:  cmd '<' WORD.    (10)
+
+	.  reduce 10 (src line 41)
+
+
+9 terminals, 6 nonterminals
+13 grammar rules, 19/2000 states
 0 shift/reduce, 0 reduce/reduce conflicts reported
-54 working sets used
-memory: parser 6/30000
+55 working sets used
+memory: parser 10/30000
 0 extra closures
-11 shift entries, 1 exceptions
-5 goto entries
-2 entries saved by goto default
-Optimizer space used: output 16/30000
-16 table entries, 0 zero
-maximum spread: 8, maximum offset: 8
+15 shift entries, 1 exceptions
+7 goto entries
+4 entries saved by goto default
+Optimizer space used: output 20/30000
+20 table entries, 0 zero
+maximum spread: 9, maximum offset: 10
