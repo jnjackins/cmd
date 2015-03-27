@@ -2,12 +2,15 @@
 state 0
 	$accept: .top $end 
 
-	WORD  shift 7
+	WORD  shift 9
 	'\n'  shift 2
 	.  error
 
-	args  goto 6
-	cmd  goto 5
+	word  goto 7
+	args  goto 10
+	asgn  goto 5
+	cmd  goto 8
+	expr  goto 6
 	pipe  goto 4
 	line  goto 3
 	top  goto 1
@@ -22,142 +25,266 @@ state 1
 state 2
 	top:  '\n'.    (1)
 
-	.  reduce 1 (src line 29)
+	.  reduce 1 (src line 33)
 
 
 state 3
 	top:  line.    (2)
 
-	.  reduce 2 (src line 30)
+	.  reduce 2 (src line 34)
 
 
 state 4
 	line:  pipe.'\n' 
 	line:  pipe.';' '\n' 
 	line:  pipe.';' line 
-	pipe:  pipe.'|' cmd 
+	pipe:  pipe.'|' expr 
 
-	'\n'  shift 8
-	';'  shift 9
-	'|'  shift 10
+	'\n'  shift 11
+	';'  shift 12
+	'|'  shift 13
 	.  error
 
 
 state 5
-	pipe:  cmd.    (6)
-	cmd:  cmd.'>' WORD 
-	cmd:  cmd.'<' WORD 
+	line:  asgn.'\n' 
+	line:  asgn.';' line 
+	expr:  asgn.cmd 
 
-	'>'  shift 11
-	'<'  shift 12
-	.  reduce 6 (src line 36)
+	WORD  shift 9
+	'\n'  shift 14
+	';'  shift 15
+	.  error
 
+	word  goto 17
+	args  goto 10
+	cmd  goto 16
 
 state 6
-	cmd:  args.    (8)
-	args:  args.WORD 
+	pipe:  expr.    (8)
 
-	WORD  shift 13
-	.  reduce 8 (src line 39)
+	.  reduce 8 (src line 42)
 
 
 state 7
-	args:  WORD.    (11)
+	asgn:  word.'=' word 
+	args:  word.    (16)
+	word:  word.'^' WORD 
 
-	.  reduce 11 (src line 43)
+	'='  shift 18
+	'^'  shift 19
+	.  reduce 16 (src line 54)
 
 
 state 8
-	line:  pipe '\n'.    (3)
+	expr:  cmd.    (10)
+	cmd:  cmd.'>' word 
+	cmd:  cmd.'<' word 
 
-	.  reduce 3 (src line 32)
+	'>'  shift 20
+	'<'  shift 21
+	.  reduce 10 (src line 45)
 
 
 state 9
-	line:  pipe ';'.'\n' 
-	line:  pipe ';'.line 
+	word:  WORD.    (18)
 
-	WORD  shift 7
-	'\n'  shift 14
-	.  error
+	.  reduce 18 (src line 57)
 
-	args  goto 6
-	cmd  goto 5
-	pipe  goto 4
-	line  goto 15
 
 state 10
-	pipe:  pipe '|'.cmd 
+	cmd:  args.    (12)
+	args:  args.word 
 
-	WORD  shift 7
-	.  error
+	WORD  shift 9
+	.  reduce 12 (src line 48)
 
-	args  goto 6
-	cmd  goto 16
+	word  goto 22
 
 state 11
-	cmd:  cmd '>'.WORD 
+	line:  pipe '\n'.    (3)
 
-	WORD  shift 17
-	.  error
+	.  reduce 3 (src line 36)
 
 
 state 12
-	cmd:  cmd '<'.WORD 
+	line:  pipe ';'.'\n' 
+	line:  pipe ';'.line 
 
-	WORD  shift 18
+	WORD  shift 9
+	'\n'  shift 23
 	.  error
 
+	word  goto 7
+	args  goto 10
+	asgn  goto 5
+	cmd  goto 8
+	expr  goto 6
+	pipe  goto 4
+	line  goto 24
 
 state 13
-	args:  args WORD.    (12)
+	pipe:  pipe '|'.expr 
 
-	.  reduce 12 (src line 44)
+	WORD  shift 9
+	.  error
 
+	word  goto 7
+	args  goto 10
+	asgn  goto 26
+	cmd  goto 8
+	expr  goto 25
 
 state 14
-	line:  pipe ';' '\n'.    (4)
+	line:  asgn '\n'.    (6)
 
-	.  reduce 4 (src line 33)
+	.  reduce 6 (src line 39)
 
 
 state 15
-	line:  pipe ';' line.    (5)
+	line:  asgn ';'.line 
 
-	.  reduce 5 (src line 34)
+	WORD  shift 9
+	.  error
 
+	word  goto 7
+	args  goto 10
+	asgn  goto 5
+	cmd  goto 8
+	expr  goto 6
+	pipe  goto 4
+	line  goto 27
 
 state 16
-	pipe:  pipe '|' cmd.    (7)
-	cmd:  cmd.'>' WORD 
-	cmd:  cmd.'<' WORD 
+	expr:  asgn cmd.    (11)
+	cmd:  cmd.'>' word 
+	cmd:  cmd.'<' word 
 
-	'>'  shift 11
-	'<'  shift 12
-	.  reduce 7 (src line 37)
+	'>'  shift 20
+	'<'  shift 21
+	.  reduce 11 (src line 46)
 
 
 state 17
-	cmd:  cmd '>' WORD.    (9)
+	args:  word.    (16)
+	word:  word.'^' WORD 
 
-	.  reduce 9 (src line 40)
+	'^'  shift 19
+	.  reduce 16 (src line 54)
 
 
 state 18
-	cmd:  cmd '<' WORD.    (10)
+	asgn:  word '='.word 
 
-	.  reduce 10 (src line 41)
+	WORD  shift 9
+	.  error
+
+	word  goto 28
+
+state 19
+	word:  word '^'.WORD 
+
+	WORD  shift 29
+	.  error
 
 
-9 terminals, 6 nonterminals
-13 grammar rules, 19/2000 states
+state 20
+	cmd:  cmd '>'.word 
+
+	WORD  shift 9
+	.  error
+
+	word  goto 30
+
+state 21
+	cmd:  cmd '<'.word 
+
+	WORD  shift 9
+	.  error
+
+	word  goto 31
+
+state 22
+	args:  args word.    (17)
+	word:  word.'^' WORD 
+
+	'^'  shift 19
+	.  reduce 17 (src line 55)
+
+
+state 23
+	line:  pipe ';' '\n'.    (4)
+
+	.  reduce 4 (src line 37)
+
+
+state 24
+	line:  pipe ';' line.    (5)
+
+	.  reduce 5 (src line 38)
+
+
+state 25
+	pipe:  pipe '|' expr.    (9)
+
+	.  reduce 9 (src line 43)
+
+
+state 26
+	expr:  asgn.cmd 
+
+	WORD  shift 9
+	.  error
+
+	word  goto 17
+	args  goto 10
+	cmd  goto 16
+
+state 27
+	line:  asgn ';' line.    (7)
+
+	.  reduce 7 (src line 40)
+
+
+state 28
+	asgn:  word '=' word.    (15)
+	word:  word.'^' WORD 
+
+	'^'  shift 19
+	.  reduce 15 (src line 52)
+
+
+state 29
+	word:  word '^' WORD.    (19)
+
+	.  reduce 19 (src line 58)
+
+
+state 30
+	cmd:  cmd '>' word.    (13)
+	word:  word.'^' WORD 
+
+	'^'  shift 19
+	.  reduce 13 (src line 49)
+
+
+state 31
+	cmd:  cmd '<' word.    (14)
+	word:  word.'^' WORD 
+
+	'^'  shift 19
+	.  reduce 14 (src line 50)
+
+
+11 terminals, 9 nonterminals
+20 grammar rules, 32/2000 states
 0 shift/reduce, 0 reduce/reduce conflicts reported
-55 working sets used
-memory: parser 10/30000
+58 working sets used
+memory: parser 33/30000
 0 extra closures
-15 shift entries, 1 exceptions
-7 goto entries
-4 entries saved by goto default
-Optimizer space used: output 20/30000
-20 table entries, 0 zero
-maximum spread: 9, maximum offset: 10
+29 shift entries, 1 exceptions
+20 goto entries
+17 entries saved by goto default
+Optimizer space used: output 37/30000
+37 table entries, 0 zero
+maximum spread: 11, maximum offset: 26

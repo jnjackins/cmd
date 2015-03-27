@@ -14,6 +14,7 @@ type shSymType struct {
 	yys   int
 	word  string
 	words []string
+	asgn  struct{}
 	cmd   *exec.Cmd
 	pipe  []*exec.Cmd
 	line  [][]*exec.Cmd
@@ -37,47 +38,55 @@ var shExca = []int{
 	-2, 0,
 }
 
-const shNprod = 13
+const shNprod = 20
 const shPrivate = 57344
 
 var shTokenNames []string
 var shStates []string
 
-const shLast = 20
+const shLast = 37
 
 var shAct = []int{
 
-	5, 11, 12, 3, 8, 9, 10, 7, 14, 7,
-	2, 16, 18, 15, 17, 7, 13, 1, 4, 6,
+	7, 8, 3, 6, 18, 19, 17, 16, 19, 5,
+	9, 22, 20, 21, 29, 24, 1, 25, 27, 28,
+	4, 30, 31, 26, 11, 12, 13, 17, 16, 9,
+	14, 15, 9, 23, 9, 2, 10,
 }
 var shPact = []int{
 
-	5, -1000, -1000, -1000, -1, -7, 12, -1000, -1000, 3,
-	11, 10, 8, -1000, -1000, -1000, -7, -1000, -1000,
+	30, -1000, -1000, -1000, 19, 25, -1000, -6, 4, -1000,
+	6, -1000, 28, 6, -1000, 6, 4, -3, 6, 10,
+	6, 6, -3, -1000, -1000, -1000, 6, -1000, -3, -1000,
+	-3, -3,
 }
 var shPgo = []int{
 
-	0, 19, 0, 18, 3, 17,
+	0, 0, 36, 9, 1, 3, 20, 2, 16,
 }
 var shR1 = []int{
 
-	0, 5, 5, 4, 4, 4, 3, 3, 2, 2,
-	2, 1, 1,
+	0, 8, 8, 7, 7, 7, 7, 7, 6, 6,
+	5, 5, 4, 4, 4, 3, 2, 2, 1, 1,
 }
 var shR2 = []int{
 
-	0, 1, 1, 2, 3, 3, 1, 3, 1, 3,
-	3, 1, 2,
+	0, 1, 1, 2, 3, 3, 2, 3, 1, 3,
+	1, 2, 1, 3, 3, 3, 1, 2, 1, 3,
 }
 var shChk = []int{
 
-	-1000, -5, 5, -4, -3, -2, -1, 4, 5, 6,
-	7, 8, 9, 4, 5, -4, -2, 4, 4,
+	-1000, -8, 5, -7, -6, -3, -5, -1, -4, 4,
+	-2, 5, 6, 7, 5, 6, -4, -1, 10, 11,
+	8, 9, -1, 5, -7, -5, -3, -7, -1, 4,
+	-1, -1,
 }
 var shDef = []int{
 
-	0, -2, 1, 2, 0, 6, 8, 11, 3, 0,
-	0, 0, 0, 12, 4, 5, 7, 9, 10,
+	0, -2, 1, 2, 0, 0, 8, 16, 10, 18,
+	12, 3, 0, 0, 6, 0, 11, 16, 0, 0,
+	0, 0, 17, 4, 5, 9, 0, 7, 15, 19,
+	13, 14,
 }
 var shTok1 = []int{
 
@@ -87,10 +96,10 @@ var shTok1 = []int{
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 6,
-	9, 3, 8, 3, 3, 3, 3, 3, 3, 3,
+	9, 10, 8, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+	3, 3, 3, 3, 11, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 7,
@@ -371,72 +380,108 @@ shdefault:
 
 	case 2:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:30
+		//line sh.y:34
 		{
 			runLine(shDollar[1].line)
 		}
 	case 3:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line sh.y:32
+		//line sh.y:36
 		{
 			shVAL.line = [][]*exec.Cmd{shDollar[1].pipe}
 		}
 	case 4:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:33
+		//line sh.y:37
 		{
 			shVAL.line = [][]*exec.Cmd{shDollar[1].pipe}
 		}
 	case 5:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:34
+		//line sh.y:38
 		{
 			shVAL.line = append(shDollar[3].line, shDollar[1].pipe)
 		}
 	case 6:
-		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:36
+		shDollar = shS[shpt-2 : shpt+1]
+		//line sh.y:39
 		{
-			shVAL.pipe = []*exec.Cmd{shDollar[1].cmd}
+			updateEnv()
 		}
 	case 7:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:37
+		//line sh.y:40
+		{
+			updateEnv()
+			shVAL.line = shDollar[3].line
+		}
+	case 8:
+		shDollar = shS[shpt-1 : shpt+1]
+		//line sh.y:42
+		{
+			shVAL.pipe = []*exec.Cmd{shDollar[1].cmd}
+		}
+	case 9:
+		shDollar = shS[shpt-3 : shpt+1]
+		//line sh.y:43
 		{
 			connect(shDollar[1].pipe[len(shDollar[1].pipe)-1], shDollar[3].cmd)
 			shVAL.pipe = append(shDollar[1].pipe, shDollar[3].cmd)
 		}
-	case 8:
+	case 10:
+		shVAL.cmd = shS[shpt-0].cmd
+	case 11:
+		shDollar = shS[shpt-2 : shpt+1]
+		//line sh.y:46
+		{
+			shVAL.cmd = shDollar[2].cmd
+		}
+	case 12:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:39
+		//line sh.y:48
 		{
 			shVAL.cmd = &exec.Cmd{Path: shDollar[1].words[0], Args: shDollar[1].words}
 		}
-	case 9:
+	case 13:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:40
+		//line sh.y:49
 		{
 			shVAL.cmd.Stdout = create(shDollar[3].word)
 			defer close(shVAL.cmd.Stdout.(io.Closer))
 		}
-	case 10:
+	case 14:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:41
+		//line sh.y:50
 		{
 			shVAL.cmd.Stdin = open(shDollar[3].word)
 			defer close(shVAL.cmd.Stdin.(io.Closer))
 		}
-	case 11:
+	case 15:
+		shDollar = shS[shpt-3 : shpt+1]
+		//line sh.y:52
+		{
+			env[shDollar[1].word] = shDollar[3].word
+			shVAL.asgn = struct{}{}
+		}
+	case 16:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:43
+		//line sh.y:54
 		{
 			shVAL.words = []string{shDollar[1].word}
 		}
-	case 12:
+	case 17:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line sh.y:44
+		//line sh.y:55
 		{
 			shVAL.words = append(shDollar[1].words, shDollar[2].word)
+		}
+	case 18:
+		shVAL.word = shS[shpt-0].word
+	case 19:
+		shDollar = shS[shpt-3 : shpt+1]
+		//line sh.y:58
+		{
+			shVAL.word = shDollar[1].word + shDollar[3].word
 		}
 	}
 	goto shstack /* stack new state and value */

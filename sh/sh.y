@@ -12,13 +12,17 @@ import (
 %union {
 	word	string
 	words	[]string
+	asgn	struct{}
 	cmd		*exec.Cmd
 	pipe	[]*exec.Cmd
 	line	[][]*exec.Cmd
 }
 
+%type <word>	word
 %type <words>	args
+%type <asgn>	asgn
 %type <cmd>		cmd
+%type <cmd>		expr
 %type <pipe>	pipe
 %type <line>	line
 
@@ -32,13 +36,23 @@ top		: '\n'
 line	: pipe '\n'			{ $$ = [][]*exec.Cmd{$1} }
 		| pipe ';' '\n'		{ $$ = [][]*exec.Cmd{$1} }
 		| pipe ';' line		{ $$ = append($3, $1) }
+		| asgn '\n'			{ updateEnv() }
+		| asgn ';' line		{ updateEnv(); $$ = $3 }
 
-pipe	: cmd				{ $$ = []*exec.Cmd{$1} }
-		| pipe '|' cmd		{ connect($1[len($1)-1], $3); $$ = append($1, $3) }
+pipe	: expr				{ $$ = []*exec.Cmd{$1} }
+		| pipe '|' expr		{ connect($1[len($1)-1], $3); $$ = append($1, $3) }
+
+expr	: cmd
+		| asgn cmd			{ $$ = $2 }
 
 cmd		: args				{ $$ = &exec.Cmd{Path: $1[0], Args: $1} }
-		| cmd '>' WORD		{ $$.Stdout = create($3); defer close($$.Stdout.(io.Closer)) }
-		| cmd '<' WORD		{ $$.Stdin = open($3); defer close($$.Stdin.(io.Closer)) }
+		| cmd '>' word		{ $$.Stdout = create($3); defer close($$.Stdout.(io.Closer)) }
+		| cmd '<' word		{ $$.Stdin = open($3); defer close($$.Stdin.(io.Closer)) }
 
-args	: WORD				{ $$ = []string{$1} }
-		| args WORD			{ $$ = append($1, $2) }
+asgn	: word '=' word		{ env[$1] = $3; $$ = struct{}{} }
+
+args	: word				{ $$ = []string{$1} }
+		| args word			{ $$ = append($1, $2) }
+
+word	: WORD
+		| word '^' WORD		{ $$ = $1 + $3 }

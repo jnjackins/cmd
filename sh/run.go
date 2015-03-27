@@ -46,6 +46,11 @@ func start(cmd *exec.Cmd) error {
 		cmd.Stdout = os.Stdout
 	}
 	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+	for key, val := range env {
+		cmd.Env = append(cmd.Env, key+"="+val)
+		delete(env, key)
+	}
 	if err := cmd.Start(); err != nil {
 		return err
 	}
