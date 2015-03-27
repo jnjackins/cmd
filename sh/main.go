@@ -18,8 +18,11 @@ func main() {
 	log.SetPrefix("sh: ")
 	log.SetFlags(0)
 	in := bufio.NewReader(os.Stdin)
+	tty := isTTY(os.Stdin)
 	for {
-		fmt.Print(os.Getenv("PS1"))
+		if tty {
+			fmt.Print(os.Getenv("PS1"))
+		}
 		line, err := in.ReadString('\n')
 		if err == io.EOF {
 			return
