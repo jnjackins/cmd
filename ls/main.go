@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	longflag = flag.Bool("l", false, "List in long format")
-	sizeflag = flag.Bool("s", false, "Give size in KB for each entry")
+	lflag = flag.Bool("l", false, "List in long format")
+	pflag = flag.Bool("p", false, "Print only the final path element of each file name")
+	sflag = flag.Bool("s", false, "Give size in KB for each entry")
 )
 
 var noargs bool
@@ -45,10 +46,10 @@ func main() {
 		}
 		for i := range fi {
 			info := fi[i]
-			if *sizeflag {
+			if *sflag {
 				fmt.Printf("%4d ", info.Size()/1024+1) // +1 is sloppy round-up
 			}
-			if *longflag {
+			if *lflag {
 				modestr := []byte("-rwxrwxrwx")
 				mode := info.Mode()
 				switch mode & os.ModeType {
@@ -78,7 +79,7 @@ func main() {
 				}
 				fmt.Printf("%s %s %s %7d %s ", modestr, uname, gname, info.Size(), info.ModTime().Format("Jan 02 15:04"))
 			}
-			if noargs == false {
+			if noargs == false && !*pflag {
 				fmt.Print(dir + "/")
 			}
 			fmt.Println(info.Name())
