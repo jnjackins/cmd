@@ -3,12 +3,18 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 )
 
 var env map[string]string
 
-func init() {
+func setupEnv() {
 	env = make(map[string]string)
+	env["pid"] = strconv.Itoa(os.Getpid())
+	if os.Getenv("prompt") == "" {
+		env["prompt"] = "$ "
+	}
+	updateEnv()
 }
 
 func updateEnv() {
