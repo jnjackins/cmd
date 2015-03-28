@@ -19,6 +19,9 @@ type shLex struct {
 // following calls to Lex
 var leftover []string
 
+// Lex returns tokens to the parser. A token is a quoted string,
+// a word, or a symbol. Environment variables and globs are expanded
+// before they are received by the parser.
 func (x *shLex) Lex(yylval *shSymType) int {
 	if leftover != nil && len(leftover) > 0 {
 		yylval.word = leftover[0]
