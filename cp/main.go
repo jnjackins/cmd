@@ -83,6 +83,7 @@ func cp(from, to string) error {
 	}
 	defer dest.Close()
 	r, w := bufio.NewReader(source), bufio.NewWriter(dest)
+	defer w.Flush()
 	_, err = io.Copy(w, r)
 	return err
 }
