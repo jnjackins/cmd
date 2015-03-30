@@ -8,10 +8,10 @@ import (
 	"syscall"
 )
 
-var tflag = flag.String("t", "", "type")
+var tflag = flag.String("t", "", "filesystem `type`")
 
 func main() {
-	elog := log.New(os.Stderr, "umount: ", 0)
+	elog := log.New(os.Stderr, "mount: ", 0)
 	flag.Parse()
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: mount [options] source target")
@@ -21,7 +21,7 @@ func main() {
 	if *tflag != "" {
 		fstype = *tflag
 	} else {
-		elog.Print("must set type")
+		elog.Print("must set filesystem type")
 		flag.Usage()
 		os.Exit(1)
 	}
