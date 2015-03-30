@@ -28,20 +28,16 @@ func main() {
 		os.Exit(1)
 	}
 	if len(args) == 2 {
-		stat, err := os.Stat(args[1])
-		if err != nil {
+		from, to := args[0], args[1]
+		stat, err := os.Stat(to)
+		if err != nil && !os.IsNotExist(err) {
 			elog.Fatal(err)
 		}
-		if stat.IsDir() {
-			err := cp(args[0], args[1]+"/"+path.Base(args[0]))
-			if err != nil {
-				elog.Fatal(err)
-			}
-		} else {
-			err := cp(args[0], args[1])
-			if err != nil {
-				elog.Fatal(err)
-			}
+		if stat != nil && stat.IsDir() {
+			to = to + "/" + path.Base(from)
+		}
+		if err := cp(from, to); err != nil {
+			elog.Fatal(err)
 		}
 	} else {
 		dir := args[len(args)-1]
