@@ -27,6 +27,8 @@ import (
 %type <line>	line
 
 %token <word> WORD
+
+// APPEND is >>
 %left '<' '>' APPEND
 
 %%
