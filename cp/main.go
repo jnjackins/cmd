@@ -77,7 +77,7 @@ func cp(from, to string) error {
 		return err
 	}
 	defer source.Close()
-	dest, err := os.Create(to)
+	dest, err := os.OpenFile(to, os.O_RDWR|os.O_CREATE|os.O_TRUNC, stat.Mode())
 	if err != nil {
 		return err
 	}
