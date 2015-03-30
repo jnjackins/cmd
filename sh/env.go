@@ -13,12 +13,12 @@ var env map[string]string
 func setupEnv() {
 	env = make(map[string]string)
 	env["pid"] = strconv.Itoa(os.Getpid())
-	if os.Getenv("home") == "" {
+	if os.Getenv("HOME") == "" {
 		u, err := user.Current()
 		if err != nil {
 			log.Print(err)
 		}
-		env["home"] = u.HomeDir
+		env["HOME"] = u.HomeDir
 	}
 	if os.Getenv("prompt") == "" {
 		env["prompt"] = "$ "
