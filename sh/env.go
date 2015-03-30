@@ -8,6 +8,7 @@ import (
 
 var env map[string]string
 
+// TODO: setup $home
 func setupEnv() {
 	env = make(map[string]string)
 	env["pid"] = strconv.Itoa(os.Getpid())

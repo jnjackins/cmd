@@ -27,6 +27,7 @@ import (
 %type <line>	line
 
 %token <word> WORD
+%left '<' '>' APPEND
 
 %%
 
@@ -46,8 +47,9 @@ expr	: cmd
 		| asgn cmd			{ $$ = $2 }
 
 cmd		: args				{ $$ = &exec.Cmd{Path: $1[0], Args: $1} }
-		| cmd '>' word		{ $$.Stdout = create($3); defer close($$.Stdout.(io.Closer)) }
-		| cmd '<' word		{ $$.Stdin = open($3); defer close($$.Stdin.(io.Closer)) }
+		| cmd '<' word		{ $$.Stdin = open($3, 'r'); defer close($$.Stdin.(io.Closer)) }
+		| cmd '>' word		{ $$.Stdout = open($3, 'w'); defer close($$.Stdout.(io.Closer)) }
+		| cmd APPEND word	{ $$.Stdout = open($3, 'a'); defer close($$.Stdout.(io.Closer)) }
 
 asgn	: word '=' word		{ env[$1] = $3; $$ = struct{}{} }
 

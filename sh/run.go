@@ -72,20 +72,22 @@ func connect(cmd1, cmd2 *exec.Cmd) {
 	cmd2.Stdin = stdout
 }
 
-func create(path string) io.WriteCloser {
-	w, err := os.Create(path)
+func open(path string, mode int) *os.File {
+	switch mode {
+	case 'r':
+		mode = os.O_RDONLY
+	case 'w':
+		mode = os.O_RDWR | os.O_CREATE | os.O_TRUNC
+	case 'a':
+		mode = os.O_RDWR | os.O_CREATE | os.O_APPEND
+	default:
+		panic("open: invalid mode")
+	}
+	f, err := os.OpenFile(path, mode, 0666)
 	if err != nil {
 		log.Print(err)
 	}
-	return w
-}
-
-func open(path string) io.ReadCloser {
-	r, err := os.Open(path)
-	if err != nil {
-		log.Print(err)
-	}
-	return r
+	return f
 }
 
 func close(c io.Closer) {

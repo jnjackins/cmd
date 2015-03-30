@@ -44,7 +44,18 @@ func (x *shLex) Lex(yylval *shSymType) int {
 		} else if r != '\n' && unicode.IsSpace(r) {
 			continue
 		} else {
-			return int(r)
+			switch r {
+			case '>':
+				rr := x.next()
+				if rr == '>' {
+					return APPEND
+				} else {
+					x.peek = rr
+					return int(r)
+				}
+			default:
+				return int(r)
+			}
 		}
 	}
 }
