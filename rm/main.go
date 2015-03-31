@@ -9,6 +9,7 @@ import (
 
 var rflag = flag.Bool("r", false, "recursive")
 var fflag = flag.Bool("f", false, "force")
+var rfflag = flag.Bool("rf", false, "recursive force")
 
 func main() {
 	elog := log.New(os.Stderr, "rm: ", 0)
@@ -17,6 +18,10 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	if *rfflag {
+		*rflag = true
+		*fflag = true
+	}
 	if len(flag.Args()) == 0 {
 		flag.Usage()
 		os.Exit(1)
