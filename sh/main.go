@@ -11,8 +11,14 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
+	"unicode"
+
+	"github.com/jnjackins/liner"
 )
 
+var eflag = flag.Bool("e", true, "enable line editing")
 var lflag = flag.String("l", "", "read commands from `file` before reading normal input")
 
 func main() {
@@ -25,15 +31,34 @@ func main() {
 		if err != nil {
 			log.Print(err)
 		} else {
-			parse(f)
+			parse(f, false)
 		}
 	}
-	parse(os.Stdin)
+	if !*eflag || !isTTY(os.Stdin) {
+		parse(os.Stdin, isTTY(os.Stdin))
+	} else {
+		prompt := liner.NewLiner()
+		defer prompt.Close()
+		for {
+			prompt.SetWordCompleter(completer)
+			line, err := prompt.Prompt(os.Getenv("prompt"))
+			if err != nil {
+				if err == io.EOF {
+					return
+				}
+				log.Print(err)
+			} else {
+				prompt.AppendHistory(line)
+				prompt.Stop()
+				shParse(&shLex{line: line + "\n"})
+				prompt.Start()
+			}
+		}
+	}
 }
 
-func parse(f *os.File) {
-	in := bufio.NewReader(f)
-	tty := isTTY(f)
+func parse(r io.Reader, tty bool) {
+	in := bufio.NewReader(r)
 	for {
 		if tty {
 			fmt.Print(os.Getenv("prompt"))
@@ -47,4 +72,17 @@ func parse(f *os.File) {
 		}
 		shParse(&shLex{line: line})
 	}
+}
+
+func completer(line string, pos int) (string, []string, string) {
+	runes := []rune(line)
+	head := runes[:pos]
+	word := ""
+	if len(head) > 0 && !unicode.IsSpace(head[len(head)-1]) {
+		fields := strings.Fields(string(head))
+		word = fields[len(fields)-1]
+		head = head[:len(head)-len([]rune(word))]
+	}
+	completions, _ := filepath.Glob(word + "*")
+	return string(head), completions, string(runes[pos:])
 }
