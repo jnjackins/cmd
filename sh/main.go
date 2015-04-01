@@ -89,5 +89,10 @@ func completer(line string, pos int) (string, []string, string) {
 		head = head[:len(head)-len([]rune(word))]
 	}
 	completions, _ := filepath.Glob(word + "*")
+	if strings.HasPrefix(word, "./") {
+		for i := range completions {
+			completions[i] = "./" + completions[i]
+		}
+	}
 	return string(head), completions, string(runes[pos:])
 }
