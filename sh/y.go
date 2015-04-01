@@ -468,20 +468,20 @@ shdefault:
 		}
 	case 16:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:54
+		//line parse.y:53
 		{
 			env[shDollar[1].word] = shDollar[3].word
 			shVAL.asgn = struct{}{}
 		}
 	case 17:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line parse.y:56
+		//line parse.y:55
 		{
 			shVAL.words = []string{shDollar[1].word}
 		}
 	case 18:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line parse.y:57
+		//line parse.y:56
 		{
 			shVAL.words = append(shDollar[1].words, shDollar[2].word)
 		}
@@ -489,7 +489,7 @@ shdefault:
 		shVAL.word = shS[shpt-0].word
 	case 20:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:60
+		//line parse.y:59
 		{
 			shVAL.word = shDollar[1].word + shDollar[3].word
 		}

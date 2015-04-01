@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -19,12 +20,15 @@ type shLex struct {
 // following calls to Lex
 var leftover []string
 
+// for error reporting
+var tok string
+
 // Lex returns tokens to the parser. A token is a quoted string,
 // a word, or a symbol. Environment variables and globs are expanded
 // before they are received by the parser.
-func (x *shLex) Lex(yylval *shSymType) int {
+func (x *shLex) Lex(lval *shSymType) int {
 	if leftover != nil && len(leftover) > 0 {
-		yylval.word = leftover[0]
+		lval.word = leftover[0]
 		leftover = leftover[1:]
 		return WORD
 	}
@@ -36,10 +40,12 @@ func (x *shLex) Lex(yylval *shSymType) int {
 			if len(expanded) > 1 {
 				leftover = expanded[1:]
 			}
-			yylval.word = expanded[0]
+			lval.word = expanded[0]
+			tok = lval.word
 			return WORD
 		} else if r == '\'' {
-			yylval.word = x.getQuoted()
+			lval.word = x.getQuoted()
+			tok = lval.word
 			return WORD
 		} else if r != '\n' && unicode.IsSpace(r) {
 			continue
@@ -51,12 +57,15 @@ func (x *shLex) Lex(yylval *shSymType) int {
 			case '>':
 				rr := x.next()
 				if rr == '>' {
+					tok = ">>"
 					return APPEND
 				} else {
 					x.peek = rr
+					tok = string(r)
 					return int(r)
 				}
 			default:
+				tok = string(r)
 				return int(r)
 			}
 		}
@@ -64,6 +73,7 @@ func (x *shLex) Lex(yylval *shSymType) int {
 }
 
 func expand(word string) []string {
+	word = os.ExpandEnv(word)
 	expanded, err := filepath.Glob(word)
 	if err != nil || len(expanded) == 0 {
 		expanded = []string{word}
@@ -89,7 +99,7 @@ func (x *shLex) getWord() string {
 }
 
 func wordChar(r rune) bool {
-	return !unicode.IsSpace(r) && !strings.ContainsRune("#;&|^$=`'{}()<>", r)
+	return !unicode.IsSpace(r) && !strings.ContainsRune("#;&|^=`'{}()<>", r)
 }
 
 func (x *shLex) getQuoted() string {
@@ -137,5 +147,5 @@ func (x *shLex) next() rune {
 }
 
 func (x *shLex) Error(s string) {
-	log.Printf("parse error: %s", s)
+	log.Printf("token '%s': %s", tok, s)
 }

@@ -50,7 +50,6 @@ cmd		: args				{ $$ = &exec.Cmd{Path: $1[0], Args: $1} }
 		| cmd '>' word		{ $$.Stdout = open($3, 'w'); defer close($$.Stdout) }
 		| cmd APPEND word	{ $$.Stdout = open($3, 'a'); defer close($$.Stdout) }
 
-// TODO: this should not be parsed as asgn if it is a command argument
 asgn	: word '=' word		{ env[$1] = $3; $$ = struct{}{} }
 
 args	: word				{ $$ = []string{$1} }

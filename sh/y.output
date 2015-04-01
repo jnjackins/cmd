@@ -73,7 +73,7 @@ state 7
 
 	'='  shift 18
 	'^'  shift 19
-	.  reduce 17 (src line 56)
+	.  reduce 17 (src line 55)
 
 
 state 8
@@ -91,7 +91,7 @@ state 8
 state 9
 	word:  WORD.    (19)
 
-	.  reduce 19 (src line 59)
+	.  reduce 19 (src line 58)
 
 
 state 10
@@ -174,7 +174,7 @@ state 17
 	word:  word.'^' WORD 
 
 	'^'  shift 19
-	.  reduce 17 (src line 56)
+	.  reduce 17 (src line 55)
 
 
 state 18
@@ -221,7 +221,7 @@ state 23
 	word:  word.'^' WORD 
 
 	'^'  shift 19
-	.  reduce 18 (src line 57)
+	.  reduce 18 (src line 56)
 
 
 state 24
@@ -263,13 +263,13 @@ state 29
 	word:  word.'^' WORD 
 
 	'^'  shift 19
-	.  reduce 16 (src line 54)
+	.  reduce 16 (src line 53)
 
 
 state 30
 	word:  word '^' WORD.    (20)
 
-	.  reduce 20 (src line 60)
+	.  reduce 20 (src line 59)
 
 
 state 31

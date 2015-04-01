@@ -45,6 +45,6 @@ func parse(f *os.File) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		shParse(&shLex{line: os.ExpandEnv(line)})
+		shParse(&shLex{line: line})
 	}
 }
