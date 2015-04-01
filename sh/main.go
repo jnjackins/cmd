@@ -24,6 +24,7 @@ var lflag = flag.String("l", "", "read commands from `file` before reading norma
 func main() {
 	log.SetPrefix("sh: ")
 	log.SetFlags(0)
+	setupSignals()
 	setupEnv()
 	flag.Parse()
 	if *lflag != "" {
@@ -31,33 +32,17 @@ func main() {
 		if err != nil {
 			log.Print(err)
 		} else {
-			parse(f, false)
+			parseDumb(f, false)
 		}
 	}
 	if !*eflag || !isTTY(os.Stdin) {
-		parse(os.Stdin, isTTY(os.Stdin))
+		parseDumb(os.Stdin, isTTY(os.Stdin))
 	} else {
-		prompt := liner.NewLiner()
-		defer prompt.Close()
-		for {
-			prompt.SetWordCompleter(completer)
-			line, err := prompt.Prompt(os.Getenv("prompt"))
-			if err != nil {
-				if err == io.EOF {
-					return
-				}
-				log.Print(err)
-			} else {
-				prompt.AppendHistory(line)
-				prompt.Stop()
-				shParse(&shLex{line: line + "\n"})
-				prompt.Start()
-			}
-		}
+		parse()
 	}
 }
 
-func parse(r io.Reader, tty bool) {
+func parseDumb(r io.Reader, tty bool) {
 	in := bufio.NewReader(r)
 	for {
 		if tty {
@@ -71,6 +56,26 @@ func parse(r io.Reader, tty bool) {
 			log.Fatal(err)
 		}
 		shParse(&shLex{line: line})
+	}
+}
+
+func parse() {
+	prompt := liner.NewLiner()
+	defer prompt.Close()
+	for {
+		prompt.SetWordCompleter(completer)
+		line, err := prompt.Prompt(os.Getenv("prompt"))
+		if err != nil {
+			if err == io.EOF {
+				return
+			}
+			log.Print(err)
+		} else {
+			prompt.AppendHistory(line)
+			prompt.Stop()
+			shParse(&shLex{line: line + "\n"})
+			prompt.Start()
+		}
 	}
 }
 
