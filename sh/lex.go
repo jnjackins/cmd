@@ -45,6 +45,9 @@ func (x *shLex) Lex(yylval *shSymType) int {
 			continue
 		} else {
 			switch r {
+			case '#':
+				x.line = "\n"
+				continue
 			case '>':
 				rr := x.next()
 				if rr == '>' {

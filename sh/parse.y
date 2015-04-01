@@ -2,10 +2,7 @@
 
 package main
 
-import (
-	"io"
-	"os/exec"
-)
+import "os/exec"
 
 %}
 
@@ -49,10 +46,11 @@ expr	: cmd
 		| asgn cmd			{ $$ = $2 }
 
 cmd		: args				{ $$ = &exec.Cmd{Path: $1[0], Args: $1} }
-		| cmd '<' word		{ $$.Stdin = open($3, 'r'); defer close($$.Stdin.(io.Closer)) }
-		| cmd '>' word		{ $$.Stdout = open($3, 'w'); defer close($$.Stdout.(io.Closer)) }
-		| cmd APPEND word	{ $$.Stdout = open($3, 'a'); defer close($$.Stdout.(io.Closer)) }
+		| cmd '<' word		{ $$.Stdin = open($3, 'r'); defer close($$.Stdin) }
+		| cmd '>' word		{ $$.Stdout = open($3, 'w'); defer close($$.Stdout) }
+		| cmd APPEND word	{ $$.Stdout = open($3, 'a'); defer close($$.Stdout) }
 
+// TODO: this should not be parsed as asgn if it is a command argument
 asgn	: word '=' word		{ env[$1] = $3; $$ = struct{}{} }
 
 args	: word				{ $$ = []string{$1} }

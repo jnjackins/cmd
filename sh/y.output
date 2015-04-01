@@ -25,13 +25,13 @@ state 1
 state 2
 	top:  '\n'.    (1)
 
-	.  reduce 1 (src line 36)
+	.  reduce 1 (src line 33)
 
 
 state 3
 	top:  line.    (2)
 
-	.  reduce 2 (src line 37)
+	.  reduce 2 (src line 34)
 
 
 state 4
@@ -63,7 +63,7 @@ state 5
 state 6
 	pipe:  expr.    (8)
 
-	.  reduce 8 (src line 45)
+	.  reduce 8 (src line 42)
 
 
 state 7
@@ -73,7 +73,7 @@ state 7
 
 	'='  shift 18
 	'^'  shift 19
-	.  reduce 17 (src line 58)
+	.  reduce 17 (src line 56)
 
 
 state 8
@@ -85,13 +85,13 @@ state 8
 	'<'  shift 20
 	'>'  shift 21
 	APPEND  shift 22
-	.  reduce 10 (src line 48)
+	.  reduce 10 (src line 45)
 
 
 state 9
 	word:  WORD.    (19)
 
-	.  reduce 19 (src line 61)
+	.  reduce 19 (src line 59)
 
 
 state 10
@@ -99,14 +99,14 @@ state 10
 	args:  args.word 
 
 	WORD  shift 9
-	.  reduce 12 (src line 51)
+	.  reduce 12 (src line 48)
 
 	word  goto 23
 
 state 11
 	line:  pipe '\n'.    (3)
 
-	.  reduce 3 (src line 39)
+	.  reduce 3 (src line 36)
 
 
 state 12
@@ -140,7 +140,7 @@ state 13
 state 14
 	line:  asgn '\n'.    (6)
 
-	.  reduce 6 (src line 42)
+	.  reduce 6 (src line 39)
 
 
 state 15
@@ -166,7 +166,7 @@ state 16
 	'<'  shift 20
 	'>'  shift 21
 	APPEND  shift 22
-	.  reduce 11 (src line 49)
+	.  reduce 11 (src line 46)
 
 
 state 17
@@ -174,7 +174,7 @@ state 17
 	word:  word.'^' WORD 
 
 	'^'  shift 19
-	.  reduce 17 (src line 58)
+	.  reduce 17 (src line 56)
 
 
 state 18
@@ -221,25 +221,25 @@ state 23
 	word:  word.'^' WORD 
 
 	'^'  shift 19
-	.  reduce 18 (src line 59)
+	.  reduce 18 (src line 57)
 
 
 state 24
 	line:  pipe ';' '\n'.    (4)
 
-	.  reduce 4 (src line 40)
+	.  reduce 4 (src line 37)
 
 
 state 25
 	line:  pipe ';' line.    (5)
 
-	.  reduce 5 (src line 41)
+	.  reduce 5 (src line 38)
 
 
 state 26
 	pipe:  pipe '|' expr.    (9)
 
-	.  reduce 9 (src line 46)
+	.  reduce 9 (src line 43)
 
 
 state 27
@@ -255,7 +255,7 @@ state 27
 state 28
 	line:  asgn ';' line.    (7)
 
-	.  reduce 7 (src line 43)
+	.  reduce 7 (src line 40)
 
 
 state 29
@@ -263,13 +263,13 @@ state 29
 	word:  word.'^' WORD 
 
 	'^'  shift 19
-	.  reduce 16 (src line 56)
+	.  reduce 16 (src line 54)
 
 
 state 30
 	word:  word '^' WORD.    (20)
 
-	.  reduce 20 (src line 62)
+	.  reduce 20 (src line 60)
 
 
 state 31
@@ -277,7 +277,7 @@ state 31
 	word:  word.'^' WORD 
 
 	'^'  shift 19
-	.  reduce 13 (src line 52)
+	.  reduce 13 (src line 49)
 
 
 state 32
@@ -285,7 +285,7 @@ state 32
 	word:  word.'^' WORD 
 
 	'^'  shift 19
-	.  reduce 14 (src line 53)
+	.  reduce 14 (src line 50)
 
 
 state 33
@@ -293,7 +293,7 @@ state 33
 	word:  word.'^' WORD 
 
 	'^'  shift 19
-	.  reduce 15 (src line 54)
+	.  reduce 15 (src line 51)
 
 
 12 terminals, 9 nonterminals

@@ -90,9 +90,14 @@ func open(path string, mode int) *os.File {
 	return f
 }
 
-func close(c io.Closer) {
-	err := c.Close()
-	if err != nil {
-		log.Print(err)
+func close(closer interface{}) {
+	switch c := closer.(type) {
+	case io.Closer:
+		err := c.Close()
+		if err != nil {
+			log.Print(err)
+		}
+	default:
+		panic("sh: close: argument is not an io.Closer")
 	}
 }

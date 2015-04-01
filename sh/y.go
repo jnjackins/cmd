@@ -1,15 +1,12 @@
-//line sh.y:2
+//line parse.y:2
 package main
 
 import __yyfmt__ "fmt"
 
-//line sh.y:3
-import (
-	"io"
-	"os/exec"
-)
+//line parse.y:3
+import "os/exec"
 
-//line sh.y:12
+//line parse.y:9
 type shSymType struct {
 	yys   int
 	word  string
@@ -386,50 +383,50 @@ shdefault:
 
 	case 2:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:37
+		//line parse.y:34
 		{
 			runLine(shDollar[1].line)
 		}
 	case 3:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line sh.y:39
+		//line parse.y:36
 		{
 			shVAL.line = [][]*exec.Cmd{shDollar[1].pipe}
 		}
 	case 4:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:40
+		//line parse.y:37
 		{
 			shVAL.line = [][]*exec.Cmd{shDollar[1].pipe}
 		}
 	case 5:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:41
+		//line parse.y:38
 		{
 			shVAL.line = append(shDollar[3].line, shDollar[1].pipe)
 		}
 	case 6:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line sh.y:42
+		//line parse.y:39
 		{
 			updateEnv()
 		}
 	case 7:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:43
+		//line parse.y:40
 		{
 			updateEnv()
 			shVAL.line = shDollar[3].line
 		}
 	case 8:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:45
+		//line parse.y:42
 		{
 			shVAL.pipe = []*exec.Cmd{shDollar[1].cmd}
 		}
 	case 9:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:46
+		//line parse.y:43
 		{
 			connect(shDollar[1].pipe[len(shDollar[1].pipe)-1], shDollar[3].cmd)
 			shVAL.pipe = append(shDollar[1].pipe, shDollar[3].cmd)
@@ -438,53 +435,53 @@ shdefault:
 		shVAL.cmd = shS[shpt-0].cmd
 	case 11:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line sh.y:49
+		//line parse.y:46
 		{
 			shVAL.cmd = shDollar[2].cmd
 		}
 	case 12:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:51
+		//line parse.y:48
 		{
 			shVAL.cmd = &exec.Cmd{Path: shDollar[1].words[0], Args: shDollar[1].words}
 		}
 	case 13:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:52
+		//line parse.y:49
 		{
 			shVAL.cmd.Stdin = open(shDollar[3].word, 'r')
-			defer close(shVAL.cmd.Stdin.(io.Closer))
+			defer close(shVAL.cmd.Stdin)
 		}
 	case 14:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:53
+		//line parse.y:50
 		{
 			shVAL.cmd.Stdout = open(shDollar[3].word, 'w')
-			defer close(shVAL.cmd.Stdout.(io.Closer))
+			defer close(shVAL.cmd.Stdout)
 		}
 	case 15:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:54
+		//line parse.y:51
 		{
 			shVAL.cmd.Stdout = open(shDollar[3].word, 'a')
-			defer close(shVAL.cmd.Stdout.(io.Closer))
+			defer close(shVAL.cmd.Stdout)
 		}
 	case 16:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:56
+		//line parse.y:54
 		{
 			env[shDollar[1].word] = shDollar[3].word
 			shVAL.asgn = struct{}{}
 		}
 	case 17:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line sh.y:58
+		//line parse.y:56
 		{
 			shVAL.words = []string{shDollar[1].word}
 		}
 	case 18:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line sh.y:59
+		//line parse.y:57
 		{
 			shVAL.words = append(shDollar[1].words, shDollar[2].word)
 		}
@@ -492,7 +489,7 @@ shdefault:
 		shVAL.word = shS[shpt-0].word
 	case 20:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line sh.y:62
+		//line parse.y:60
 		{
 			shVAL.word = shDollar[1].word + shDollar[3].word
 		}
