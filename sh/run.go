@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
+	"syscall"
 )
 
 func runLine(line [][]*exec.Cmd) {
@@ -58,8 +60,11 @@ func start(cmd *exec.Cmd) error {
 }
 
 func wait(cmd *exec.Cmd) {
-	err := cmd.Wait()
-	if err != nil {
+	if err := cmd.Wait(); err != nil {
+		log.Print(err)
+	}
+	status := cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
+	if err := os.Setenv("status", strconv.Itoa(status)); err != nil {
 		log.Print(err)
 	}
 }
