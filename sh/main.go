@@ -1,5 +1,3 @@
-// TODO: handle sigint correctly
-
 //go:generate go tool yacc -p "sh" parse.y
 
 package main
