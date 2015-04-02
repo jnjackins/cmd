@@ -15,11 +15,15 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/jnjackins/liner"
+	"github.com/peterh/liner"
 )
 
-var eflag = flag.Bool("e", true, "enable line editing")
-var lflag = flag.String("l", "", "read commands from `file` before reading normal input")
+var (
+	eflag = flag.Bool("e", true, "enable line editing")
+	lflag = flag.String("l", "", "read commands from `file` before reading normal input")
+)
+
+var cooked, raw liner.ModeApplier
 
 func main() {
 	log.SetPrefix("sh: ")
@@ -60,10 +64,12 @@ func parseDumb(r io.Reader, tty bool) {
 }
 
 func parse() {
-	prompt := liner.NewLiner()
+	prompt, err := setupLineEditing()
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer prompt.Close()
 	for {
-		prompt.SetWordCompleter(completer)
 		line, err := prompt.Prompt(os.Getenv("prompt"))
 		if err != nil {
 			if err == io.EOF {
@@ -72,14 +78,41 @@ func parse() {
 			log.Print(err)
 		} else {
 			prompt.AppendHistory(line)
-			prompt.Stop()
+			setCooked()
 			shParse(&shLex{line: line + "\n"})
-			prompt.Start()
+			setRaw()
 		}
 	}
 }
 
-func completer(line string, pos int) (string, []string, string) {
+func setupLineEditing() (*liner.State, error) {
+	var err error
+	cooked, err = liner.TerminalMode()
+	if err != nil {
+		return nil, err
+	}
+	s := liner.NewLiner()
+	s.SetWordCompleter(complete)
+	raw, err = liner.TerminalMode()
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func setCooked() {
+	if err := cooked.ApplyMode(); err != nil {
+		log.Print(err)
+	}
+}
+
+func setRaw() {
+	if err := raw.ApplyMode(); err != nil {
+		log.Print(err)
+	}
+}
+
+func complete(line string, pos int) (string, []string, string) {
 	runes := []rune(line)
 	head := runes[:pos]
 	word := ""

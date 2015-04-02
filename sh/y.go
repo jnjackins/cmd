@@ -18,10 +18,18 @@ type shSymType struct {
 }
 
 const WORD = 57346
-const APPEND = 57347
+const IF = 57347
+const FOR = 57348
+const SWITCH = 57349
+const APPEND = 57350
 
 var shToknames = []string{
 	"WORD",
+	"IF",
+	"FOR",
+	"SWITCH",
+	"'|'",
+	"'^'",
 	"'<'",
 	"'>'",
 	"APPEND",
@@ -45,25 +53,26 @@ const shPrivate = 57344
 var shTokenNames []string
 var shStates []string
 
-const shLast = 40
+const shLast = 48
 
 var shAct = []int{
 
-	7, 8, 3, 6, 18, 19, 17, 16, 19, 9,
-	5, 23, 11, 12, 13, 25, 9, 26, 28, 29,
-	24, 31, 32, 33, 27, 30, 9, 1, 17, 16,
-	14, 15, 20, 21, 22, 9, 4, 10, 0, 2,
+	7, 8, 3, 19, 9, 19, 17, 16, 9, 18,
+	6, 23, 9, 14, 15, 25, 1, 24, 28, 29,
+	13, 31, 32, 33, 26, 11, 12, 9, 17, 16,
+	20, 21, 22, 5, 30, 4, 2, 10, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 27,
 }
 var shPact = []int{
 
-	31, -1000, -1000, -1000, 4, 22, -1000, -7, 27, -1000,
-	5, -1000, 12, 5, -1000, 5, 27, -4, 5, 21,
-	5, 5, 5, -4, -1000, -1000, -1000, 5, -1000, -4,
+	23, -1000, -1000, -1000, 12, 0, -1000, -6, 20, -1000,
+	8, -1000, 4, 8, -1000, 8, 20, -4, 8, 30,
+	8, 8, 8, -4, -1000, -1000, -1000, 8, -1000, -4,
 	-1000, -4, -4, -4,
 }
 var shPgo = []int{
 
-	0, 0, 37, 10, 1, 3, 36, 2, 27,
+	0, 0, 37, 33, 1, 10, 35, 2, 16,
 }
 var shR1 = []int{
 
@@ -79,9 +88,9 @@ var shR2 = []int{
 }
 var shChk = []int{
 
-	-1000, -8, 8, -7, -6, -3, -5, -1, -4, 4,
-	-2, 8, 9, 10, 8, 9, -4, -1, 11, 12,
-	5, 6, 7, -1, 8, -7, -5, -3, -7, -1,
+	-1000, -8, 13, -7, -6, -3, -5, -1, -4, 4,
+	-2, 13, 14, 8, 13, 14, -4, -1, 15, 9,
+	10, 11, 12, -1, 13, -7, -5, -3, -7, -1,
 	4, -1, -1, -1,
 }
 var shDef = []int{
@@ -94,22 +103,22 @@ var shDef = []int{
 var shTok1 = []int{
 
 	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	8, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+	13, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 9,
-	5, 11, 6, 3, 3, 3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 14,
+	10, 15, 11, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 12, 3, 3, 3, 3, 3,
+	3, 3, 3, 3, 9, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 10,
+	3, 3, 3, 3, 8,
 }
 var shTok2 = []int{
 
-	2, 3, 4, 7,
+	2, 3, 4, 5, 6, 7, 12,
 }
 var shTok3 = []int{
 	0,
@@ -383,105 +392,105 @@ shdefault:
 
 	case 2:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line parse.y:34
+		//line parse.y:36
 		{
 			runLine(shDollar[1].line)
 		}
 	case 3:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line parse.y:36
+		//line parse.y:38
 		{
 			shVAL.line = [][]*exec.Cmd{shDollar[1].pipe}
 		}
 	case 4:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:37
+		//line parse.y:39
 		{
 			shVAL.line = [][]*exec.Cmd{shDollar[1].pipe}
 		}
 	case 5:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:38
+		//line parse.y:40
 		{
 			shVAL.line = append(shDollar[3].line, shDollar[1].pipe)
 		}
 	case 6:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line parse.y:39
+		//line parse.y:41
 		{
 			updateEnv()
 		}
 	case 7:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:40
+		//line parse.y:42
 		{
 			updateEnv()
 			shVAL.line = shDollar[3].line
 		}
 	case 8:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line parse.y:42
+		//line parse.y:44
 		{
 			shVAL.pipe = []*exec.Cmd{shDollar[1].cmd}
 		}
 	case 9:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:43
+		//line parse.y:45
 		{
-			connect(shDollar[1].pipe[len(shDollar[1].pipe)-1], shDollar[3].cmd)
+			pconnect(shDollar[1].pipe[len(shDollar[1].pipe)-1], shDollar[3].cmd)
 			shVAL.pipe = append(shDollar[1].pipe, shDollar[3].cmd)
 		}
 	case 10:
 		shVAL.cmd = shS[shpt-0].cmd
 	case 11:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line parse.y:46
+		//line parse.y:48
 		{
 			shVAL.cmd = shDollar[2].cmd
 		}
 	case 12:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line parse.y:48
+		//line parse.y:50
 		{
 			shVAL.cmd = &exec.Cmd{Path: shDollar[1].words[0], Args: shDollar[1].words}
 		}
 	case 13:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:49
+		//line parse.y:51
 		{
-			shVAL.cmd.Stdin = open(shDollar[3].word, 'r')
-			defer close(shVAL.cmd.Stdin)
+			shVAL.cmd.Stdin = fopen(shDollar[3].word, 'r')
+			defer fclose(shVAL.cmd.Stdin)
 		}
 	case 14:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:50
+		//line parse.y:52
 		{
-			shVAL.cmd.Stdout = open(shDollar[3].word, 'w')
-			defer close(shVAL.cmd.Stdout)
+			shVAL.cmd.Stdout = fopen(shDollar[3].word, 'w')
+			defer fclose(shVAL.cmd.Stdout)
 		}
 	case 15:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:51
+		//line parse.y:53
 		{
-			shVAL.cmd.Stdout = open(shDollar[3].word, 'a')
-			defer close(shVAL.cmd.Stdout)
+			shVAL.cmd.Stdout = fopen(shDollar[3].word, 'a')
+			defer fclose(shVAL.cmd.Stdout)
 		}
 	case 16:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:53
+		//line parse.y:55
 		{
 			env[shDollar[1].word] = shDollar[3].word
 			shVAL.asgn = struct{}{}
 		}
 	case 17:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line parse.y:55
+		//line parse.y:57
 		{
 			shVAL.words = []string{shDollar[1].word}
 		}
 	case 18:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line parse.y:56
+		//line parse.y:58
 		{
 			shVAL.words = append(shDollar[1].words, shDollar[2].word)
 		}
@@ -489,7 +498,7 @@ shdefault:
 		shVAL.word = shS[shpt-0].word
 	case 20:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line parse.y:59
+		//line parse.y:61
 		{
 			shVAL.word = shDollar[1].word + shDollar[3].word
 		}

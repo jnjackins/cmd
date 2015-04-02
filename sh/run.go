@@ -69,7 +69,7 @@ func wait(cmd *exec.Cmd) {
 	}
 }
 
-func connect(cmd1, cmd2 *exec.Cmd) {
+func pconnect(cmd1, cmd2 *exec.Cmd) {
 	stdout, err := cmd1.StdoutPipe()
 	if err != nil {
 		log.Print(err)
@@ -77,7 +77,7 @@ func connect(cmd1, cmd2 *exec.Cmd) {
 	cmd2.Stdin = stdout
 }
 
-func open(path string, mode int) *os.File {
+func fopen(path string, mode int) *os.File {
 	switch mode {
 	case 'r':
 		mode = os.O_RDONLY
@@ -95,7 +95,7 @@ func open(path string, mode int) *os.File {
 	return f
 }
 
-func close(closer interface{}) {
+func fclose(closer interface{}) {
 	switch c := closer.(type) {
 	case io.Closer:
 		err := c.Close()

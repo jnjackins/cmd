@@ -25,7 +25,9 @@ import "os/exec"
 
 %token <word> WORD
 
-// APPEND is >>
+%left IF FOR SWITCH
+%left '|'
+%left '^'
 %left '<' '>' APPEND
 
 %%
@@ -40,15 +42,15 @@ line	: pipe '\n'			{ $$ = [][]*exec.Cmd{$1} }
 		| asgn ';' line		{ updateEnv(); $$ = $3 }
 
 pipe	: expr				{ $$ = []*exec.Cmd{$1} }
-		| pipe '|' expr		{ connect($1[len($1)-1], $3); $$ = append($1, $3) }
+		| pipe '|' expr		{ pconnect($1[len($1)-1], $3); $$ = append($1, $3) }
 
 expr	: cmd
 		| asgn cmd			{ $$ = $2 }
 
 cmd		: args				{ $$ = &exec.Cmd{Path: $1[0], Args: $1} }
-		| cmd '<' word		{ $$.Stdin = open($3, 'r'); defer close($$.Stdin) }
-		| cmd '>' word		{ $$.Stdout = open($3, 'w'); defer close($$.Stdout) }
-		| cmd APPEND word	{ $$.Stdout = open($3, 'a'); defer close($$.Stdout) }
+		| cmd '<' word		{ $$.Stdin = fopen($3, 'r'); defer fclose($$.Stdin) }
+		| cmd '>' word		{ $$.Stdout = fopen($3, 'w'); defer fclose($$.Stdout) }
+		| cmd APPEND word	{ $$.Stdout = fopen($3, 'a'); defer fclose($$.Stdout) }
 
 asgn	: word '=' word		{ env[$1] = $3; $$ = struct{}{} }
 
