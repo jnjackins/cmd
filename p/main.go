@@ -26,7 +26,10 @@ func main() {
 	stdin = bufio.NewReader(os.Stdin)
 	f, err := os.Open("/dev/tty")
 	if err != nil {
-		elog.Fatal(err)
+		f, err = os.Open("/dev/console")
+		if err != nil {
+			elog.Fatal("couldn't open /dev/tty or /dev/console")
+		}
 	}
 	defer f.Close()
 	tty = bufio.NewReader(f)
