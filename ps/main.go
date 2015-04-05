@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -18,17 +19,20 @@ func main() {
 	if err != nil {
 		elog.Fatal(err)
 	}
-	fmt.Fprintf(os.Stderr, "%4s %6s %s %s\n", "PID", "RSS", "STATE", "CMD")
+	fmt.Fprintf(os.Stderr, "%4s %s %s\n", "PID", "STATE", "CMD")
 	for _, pid := range pids {
-		stat, err := ioutil.ReadFile("/proc/" + pid + "stat")
+		if _, err := strconv.Atoi(pid); err != nil {
+			continue
+		}
+		stat, err := ioutil.ReadFile("/proc/" + pid + "/stat")
 		if err != nil {
-			log.Print(err)
+			elog.Print(err)
 			continue
 		}
 		fields := strings.Fields(string(stat))
 		name := strings.Trim(fields[1], "()")
 		state := fields[4]
 		rss := fields[25]
-		fmt.Printf("%4d %6d %s %s\n", pid, rss, state, name)
+		fmt.Printf("%4s %s %s\n", pid, state, name)
 	}
 }
