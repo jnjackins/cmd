@@ -15,7 +15,7 @@ var builtins = map[string]func(path string, args []string){
 func cdBuiltin(path string, args []string) {
 	var dest string
 	if len(args) == 1 {
-		dest = os.Getenv("HOME")
+		dest = os.Getenv("home")
 	} else {
 		dest = args[1]
 	}

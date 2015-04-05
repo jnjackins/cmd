@@ -35,7 +35,7 @@ func runLine(line [][]*exec.Cmd) {
 // Start reports whether it started cmd.
 func start(cmd *exec.Cmd) error {
 	if filepath.Base(cmd.Path) == cmd.Path {
-		if lp, err := exec.LookPath(cmd.Path); err != nil {
+		if lp, err := lookPath(cmd.Path); err != nil {
 			return err
 		} else {
 			cmd.Path = lp
