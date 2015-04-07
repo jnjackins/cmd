@@ -79,7 +79,8 @@ func expand(word string) []string {
 	expanded, err := filepath.Glob(word)
 	if err != nil || len(expanded) == 0 {
 		if word != "" {
-			expanded = []string{word}
+			// TODO: when we have lists, this should be expanded = []string{word}
+			expanded = strings.Fields(word)
 		}
 	}
 	return expanded

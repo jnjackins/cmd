@@ -37,7 +37,16 @@ func main() {
 			parseDumb(f, false)
 		}
 	}
-	if !*eflag || !isTTY(os.Stdin) {
+	args := flag.Args()
+	if len(args) > 0 {
+		f, err := os.Open(args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		env["*"] = strings.Join(args[1:], " ")
+		updateEnv()
+		parseDumb(f, false)
+	} else if !*eflag || !isTTY(os.Stdin) {
 		parseDumb(os.Stdin, isTTY(os.Stdin))
 	} else {
 		parse()
@@ -45,19 +54,16 @@ func main() {
 }
 
 func parseDumb(r io.Reader, tty bool) {
-	in := bufio.NewReader(r)
-	for {
+	in := bufio.NewScanner(bufio.NewReader(r))
+	for in.Scan() {
 		if tty {
 			fmt.Print(os.Getenv("prompt"))
 		}
-		line, err := in.ReadString('\n')
-		if err == io.EOF {
-			return
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
+		line := in.Text() + "\n"
 		shParse(&shLex{line: line})
+	}
+	if err := in.Err(); err != nil {
+		log.Print(err)
 	}
 }
 
