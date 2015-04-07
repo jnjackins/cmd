@@ -10,14 +10,14 @@ import (
 	"sigint.ca/text/column"
 )
 
-var cflag = flag.Int("c", 80, "maximum columns per line")
+var wflag = flag.Int("w", 80, "maximum `width` of columnated text")
 
 func main() {
 	elog := log.New(os.Stderr, "mc: ", 0)
 	flag.Parse()
 	in, out := bufio.NewReader(os.Stdin), bufio.NewWriter(os.Stdout)
 	defer out.Flush()
-	colWriter := column.NewWriter(out, *cflag)
+	colWriter := column.NewWriter(out, *wflag)
 	_, err := io.Copy(colWriter, in)
 	if err != nil {
 		elog.Print(err)
