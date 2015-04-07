@@ -3,12 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"syscall"
+	"text/tabwriter"
 	"time"
 
 	"sigint.ca/group"
@@ -80,30 +82,33 @@ func main() {
 				sort.Sort(rev(normalSort(fi)))
 			}
 
+			w := tabwriter.NewWriter(os.Stdout, 0, 0, 0, ' ', tabwriter.AlignRight)
 			for i := range fi {
 				if noargs {
 					path = ""
 				}
-				ls(fi[i], path)
+				ls(w, fi[i], path)
 			}
+			w.Flush()
+
 		} else {
 			if path != stat.Name() {
 				path = filepath.Dir(path)
 			} else {
 				path = ""
 			}
-			ls(stat, path)
+			ls(os.Stdout, stat, path)
 		}
 	}
 	os.Exit(status)
 }
 
-func ls(info os.FileInfo, path string) {
+func ls(w io.Writer, info os.FileInfo, path string) {
 	if *sflag {
-		fmt.Printf("%4d ", info.Size()/1024+1) // +1 is sloppy round-up
+		fmt.Fprintf(w, "%d\t ", info.Size()/1024+1) // +1 is sloppy round-up
 	}
 	if *lflag {
-		fmt.Printf("%s ", modeString(info.Mode()))
+		fmt.Fprintf(w, "%s\t ", modeString(info.Mode()))
 
 		stat := info.Sys().(*syscall.Stat_t) // TODO: non-portable
 		uid := strconv.Itoa(int(stat.Uid))
@@ -112,22 +117,22 @@ func ls(info os.FileInfo, path string) {
 		if err == nil {
 			uname = u.Username
 		}
-		fmt.Printf("%-8s ", uname)
+		fmt.Fprintf(w, "%s\t ", uname)
 
 		gid := strconv.Itoa(int(stat.Gid))
 		gname, err := group.Name(gid)
 		if err != nil {
 			gname = gid
 		}
-		fmt.Printf("%-8s ", gname)
+		fmt.Fprintf(w, "%s\t ", gname)
 
 		// major, minor
 		if info.Mode()&os.ModeDevice > 0 {
 			major, minor := devNums(stat.Rdev)
-			fmt.Printf("%3d, %3d ", major, minor)
+			fmt.Fprintf(w, "%3d, %3d\t ", major, minor)
+		} else {
+			fmt.Fprintf(w, "%d\t ", info.Size())
 		}
-
-		fmt.Printf("%7d ", info.Size())
 
 		// modified time
 		var modtime string
@@ -138,13 +143,13 @@ func ls(info os.FileInfo, path string) {
 			modtime = info.ModTime().Format("Jan 02  ") + strconv.Itoa(year)
 		}
 
-		fmt.Printf("%s ", modtime)
+		fmt.Fprintf(w, "%s ", modtime)
 	}
 
 	if path != "" && !*pflag {
-		fmt.Println(filepath.Clean(path + "/" + info.Name()))
+		fmt.Fprintln(w, filepath.Clean(path+"/"+info.Name()))
 	} else {
-		fmt.Println(info.Name())
+		fmt.Fprintln(w, info.Name())
 	}
 }
 
