@@ -23,7 +23,10 @@ const FOR = 57348
 const SWITCH = 57349
 const APPEND = 57350
 
-var shToknames = []string{
+var shToknames = [...]string{
+	"$end",
+	"error",
+	"$unk",
 	"WORD",
 	"IF",
 	"FOR",
@@ -33,15 +36,18 @@ var shToknames = []string{
 	"'<'",
 	"'>'",
 	"APPEND",
+	"'\n'",
+	"';'",
+	"'='",
 }
-var shStatenames = []string{}
+var shStatenames = [...]string{}
 
 const shEofCode = 1
 const shErrCode = 2
 const shMaxDepth = 200
 
 //line yacctab:1
-var shExca = []int{
+var shExca = [...]int{
 	-1, 1,
 	1, -1,
 	-2, 0,
@@ -55,7 +61,7 @@ var shStates []string
 
 const shLast = 48
 
-var shAct = []int{
+var shAct = [...]int{
 
 	7, 8, 3, 19, 9, 19, 17, 16, 9, 18,
 	6, 23, 9, 14, 15, 25, 1, 24, 28, 29,
@@ -63,44 +69,44 @@ var shAct = []int{
 	20, 21, 22, 5, 30, 4, 2, 10, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 27,
 }
-var shPact = []int{
+var shPact = [...]int{
 
 	23, -1000, -1000, -1000, 12, 0, -1000, -6, 20, -1000,
 	8, -1000, 4, 8, -1000, 8, 20, -4, 8, 30,
 	8, 8, 8, -4, -1000, -1000, -1000, 8, -1000, -4,
 	-1000, -4, -4, -4,
 }
-var shPgo = []int{
+var shPgo = [...]int{
 
 	0, 0, 37, 33, 1, 10, 35, 2, 16,
 }
-var shR1 = []int{
+var shR1 = [...]int{
 
 	0, 8, 8, 7, 7, 7, 7, 7, 6, 6,
 	5, 5, 4, 4, 4, 4, 3, 2, 2, 1,
 	1,
 }
-var shR2 = []int{
+var shR2 = [...]int{
 
 	0, 1, 1, 2, 3, 3, 2, 3, 1, 3,
 	1, 2, 1, 3, 3, 3, 3, 1, 2, 1,
 	3,
 }
-var shChk = []int{
+var shChk = [...]int{
 
 	-1000, -8, 13, -7, -6, -3, -5, -1, -4, 4,
 	-2, 13, 14, 8, 13, 14, -4, -1, 15, 9,
 	10, 11, 12, -1, 13, -7, -5, -3, -7, -1,
 	4, -1, -1, -1,
 }
-var shDef = []int{
+var shDef = [...]int{
 
 	0, -2, 1, 2, 0, 0, 8, 17, 10, 19,
 	12, 3, 0, 0, 6, 0, 11, 17, 0, 0,
 	0, 0, 0, 18, 4, 5, 9, 0, 7, 16,
 	20, 13, 14, 15,
 }
-var shTok1 = []int{
+var shTok1 = [...]int{
 
 	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	13, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -116,11 +122,11 @@ var shTok1 = []int{
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 8,
 }
-var shTok2 = []int{
+var shTok2 = [...]int{
 
 	2, 3, 4, 5, 6, 7, 12,
 }
-var shTok3 = []int{
+var shTok3 = [...]int{
 	0,
 }
 
@@ -128,7 +134,10 @@ var shTok3 = []int{
 
 /*	parser for yacc output	*/
 
-var shDebug = 0
+var (
+	shDebug        = 0
+	shErrorVerbose = false
+)
 
 type shLexer interface {
 	Lex(lval *shSymType) int
@@ -142,6 +151,7 @@ type shParser interface {
 
 type shParserImpl struct {
 	lookahead func() int
+	state     func() int
 }
 
 func (p *shParserImpl) Lookahead() int {
@@ -151,6 +161,7 @@ func (p *shParserImpl) Lookahead() int {
 func shNewParser() shParser {
 	p := &shParserImpl{
 		lookahead: func() int { return -1 },
+		state:     func() int { return -1 },
 	}
 	return p
 }
@@ -158,10 +169,9 @@ func shNewParser() shParser {
 const shFlag = -1000
 
 func shTokname(c int) string {
-	// 4 is TOKSTART above
-	if c >= 4 && c-4 < len(shToknames) {
-		if shToknames[c-4] != "" {
-			return shToknames[c-4]
+	if c >= 1 && c-1 < len(shToknames) {
+		if shToknames[c-1] != "" {
+			return shToknames[c-1]
 		}
 	}
 	return __yyfmt__.Sprintf("tok-%v", c)
@@ -174,6 +184,63 @@ func shStatname(s int) string {
 		}
 	}
 	return __yyfmt__.Sprintf("state-%v", s)
+}
+
+func shErrorMessage(state, lookAhead int) string {
+	const TOKSTART = 4
+
+	if !shErrorVerbose {
+		return "syntax error"
+	}
+	res := "syntax error: unexpected " + shTokname(lookAhead)
+
+	// To match Bison, suggest at most four expected tokens.
+	expected := make([]int, 0, 4)
+
+	// Look for shiftable tokens.
+	base := shPact[state]
+	for tok := TOKSTART; tok-1 < len(shToknames); tok++ {
+		if n := base + tok; n >= 0 && n < shLast && shChk[shAct[n]] == tok {
+			if len(expected) == cap(expected) {
+				return res
+			}
+			expected = append(expected, tok)
+		}
+	}
+
+	if shDef[state] == -2 {
+		i := 0
+		for shExca[i] != -1 || shExca[i+1] != state {
+			i += 2
+		}
+
+		// Look for tokens that we accept or reduce.
+		for i += 2; shExca[i] >= 0; i += 2 {
+			tok := shExca[i]
+			if tok < TOKSTART || shExca[i+1] == 0 {
+				continue
+			}
+			if len(expected) == cap(expected) {
+				return res
+			}
+			expected = append(expected, tok)
+		}
+
+		// If the default action is to accept or reduce, give up.
+		if shExca[i+1] != 0 {
+			return res
+		}
+	}
+
+	for i, tok := range expected {
+		if i == 0 {
+			res += ", expecting "
+		} else {
+			res += " or "
+		}
+		res += shTokname(tok)
+	}
+	return res
 }
 
 func shlex1(lex shLexer, lval *shSymType) (char, token int) {
@@ -227,9 +294,11 @@ func (shrcvr *shParserImpl) Parse(shlex shLexer) int {
 	shstate := 0
 	shchar := -1
 	shtoken := -1 // shchar translated into internal numbering
+	shrcvr.state = func() int { return shstate }
 	shrcvr.lookahead = func() int { return shchar }
 	defer func() {
 		// Make sure we report no lookahead when not parsing.
+		shstate = -1
 		shchar = -1
 		shtoken = -1
 	}()
@@ -312,7 +381,7 @@ shdefault:
 		/* error ... attempt to resume parsing */
 		switch Errflag {
 		case 0: /* brand new error */
-			shlex.Error("syntax error")
+			shlex.Error(shErrorMessage(shstate, shtoken))
 			Nerrs++
 			if shDebug >= 1 {
 				__yyfmt__.Printf("%s", shStatname(shstate))
@@ -440,8 +509,6 @@ shdefault:
 			pconnect(shDollar[1].pipe[len(shDollar[1].pipe)-1], shDollar[3].cmd)
 			shVAL.pipe = append(shDollar[1].pipe, shDollar[3].cmd)
 		}
-	case 10:
-		shVAL.cmd = shS[shpt-0].cmd
 	case 11:
 		shDollar = shS[shpt-2 : shpt+1]
 		//line parse.y:48
@@ -494,8 +561,6 @@ shdefault:
 		{
 			shVAL.words = append(shDollar[1].words, shDollar[2].word)
 		}
-	case 19:
-		shVAL.word = shS[shpt-0].word
 	case 20:
 		shDollar = shS[shpt-3 : shpt+1]
 		//line parse.y:61
