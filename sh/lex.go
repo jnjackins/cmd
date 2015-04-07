@@ -37,7 +37,9 @@ func (x *shLex) Lex(lval *shSymType) int {
 		if wordChar(r) && r != eof {
 			word := string(r) + x.getWord()
 			expanded := expand(word)
-			if len(expanded) > 1 {
+			if len(expanded) == 0 {
+				continue
+			} else if len(expanded) > 1 {
 				leftover = expanded[1:]
 			}
 			lval.word = expanded[0]
@@ -76,7 +78,9 @@ func expand(word string) []string {
 	word = os.ExpandEnv(word)
 	expanded, err := filepath.Glob(word)
 	if err != nil || len(expanded) == 0 {
-		expanded = []string{word}
+		if word != "" {
+			expanded = []string{word}
+		}
 	}
 	return expanded
 }
