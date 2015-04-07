@@ -106,8 +106,10 @@ func ls(info os.FileInfo, path string) {
 		}
 		fmt.Printf("%s %s %s %7d %s ", modestr, uname, gname, info.Size(), info.ModTime().Format("Jan 02 15:04"))
 	}
+
 	if path != "" && !*pflag {
-		fmt.Print(filepath.Clean(path) + "/")
+		fmt.Println(filepath.Clean(path + "/" + info.Name()))
+	} else {
+		fmt.Println(info.Name())
 	}
-	fmt.Println(info.Name())
 }
