@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 )
 
 func main() {
@@ -19,7 +20,9 @@ func main() {
 	if err != nil {
 		elog.Fatal(err)
 	}
-	fmt.Fprintf(os.Stderr, "%5s %6s %s %s\n", "PID", "RSS", "STATE", "CMD")
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+	fmt.Fprintln(w, "PID\tRSS\tSTATE\tCMD")
+	defer w.Flush()
 	for _, pid := range pids {
 		if _, err := strconv.Atoi(pid); err != nil {
 			continue
@@ -33,6 +36,6 @@ func main() {
 		name := strings.Trim(fields[1], "()")
 		state := fields[2]
 		rss := fields[23]
-		fmt.Printf("%5s %6s %s %s\n", pid, rss, state, name)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", pid, rss, state, name)
 	}
 }
