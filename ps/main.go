@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,8 +11,15 @@ import (
 	"text/tabwriter"
 )
 
+var kflag = flag.Bool("k", false, "Show kernel threads (processes with a parent PID of 0).")
+
 func main() {
 	elog := log.New(os.Stderr, "ps: ", 0)
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: ps [options]")
+		flag.PrintDefaults()
+	}
+	flag.Parse()
 	f, err := os.Open("/proc")
 	if err != nil {
 		elog.Fatal(err)
@@ -21,7 +29,7 @@ func main() {
 		elog.Fatal(err)
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-	fmt.Fprintln(w, "PID\tRSS\tSTATE\tCMD")
+	fmt.Fprintln(w, "PID\tPPID\tRSS\tSTATE\tCMD")
 	defer w.Flush()
 	for _, pid := range pids {
 		if _, err := strconv.Atoi(pid); err != nil {
@@ -35,7 +43,13 @@ func main() {
 		fields := strings.Fields(string(stat))
 		name := strings.Trim(fields[1], "()")
 		state := fields[2]
+		ppid := fields[3]
 		rss := fields[23]
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", pid, rss, state, name)
+		if !*kflag {
+			if ppid == "0" {
+				continue
+			}
+		}
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", pid, ppid, rss, state, name)
 	}
 }
