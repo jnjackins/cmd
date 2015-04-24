@@ -29,11 +29,11 @@ func (a timeSort) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a timeSort) Less(i, j int) bool { return a[i].ModTime().After(a[j].ModTime()) }
 
 var (
-	lflag = flag.Bool("l", false, "List in long format")
-	pflag = flag.Bool("p", false, "Print only the final path element of each file name")
-	rflag = flag.Bool("r", false, "Reverse the order of sort")
-	sflag = flag.Bool("s", false, "Give size in KB for each entry")
-	tflag = flag.Bool("t", false, "Sort by time modified (latest first) instead of by name")
+	lflag = flag.Bool("l", false, "List in long format.")
+	pflag = flag.Bool("p", false, "Print only the final path element of each file name.")
+	rflag = flag.Bool("r", false, "Reverse the order of sort.")
+	sflag = flag.Bool("s", false, "Give size in KB for each entry.")
+	tflag = flag.Bool("t", false, "Sort by time modified (latest first) instead of by name.")
 )
 
 func main() {
