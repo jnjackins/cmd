@@ -46,7 +46,8 @@ func main() {
 		ppid := fields[3]
 		rss := fields[23]
 		if !*kflag {
-			if ppid == "0" {
+			// TODO: find a better way to identify kernel threads
+			if pid == "2" || ppid == "2" {
 				continue
 			}
 		}
