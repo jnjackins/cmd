@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"text/tabwriter"
+	"time"
 )
 
 var kflag = flag.Bool("k", false, "Show kernel threads (processes with a parent PID of 0).")
@@ -20,6 +21,7 @@ func main() {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	tps := ticksPerSecond()
 	f, err := os.Open("/proc")
 	if err != nil {
 		elog.Fatal(err)
@@ -29,7 +31,7 @@ func main() {
 		elog.Fatal(err)
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-	fmt.Fprintln(w, "PID\tPPID\tRSS\tSTATE\tCMD")
+	fmt.Fprintln(w, "PID\tPPID\tTIME\tRSS\tSTATE\tCMD")
 	defer w.Flush()
 	for _, pid := range pids {
 		if _, err := strconv.Atoi(pid); err != nil {
@@ -44,6 +46,9 @@ func main() {
 		name := strings.Trim(fields[1], "()")
 		state := fields[2]
 		ppid := fields[3]
+		utime, _ := strconv.Atoi(fields[13])
+		stime, _ := strconv.Atoi(fields[14])
+		time := time.Second * time.Duration((utime+stime)/tps)
 		rss := fields[23]
 		if !*kflag {
 			// TODO: find a better way to identify kernel threads
@@ -51,6 +56,6 @@ func main() {
 				continue
 			}
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n", pid, ppid, rss, state, name)
+		fmt.Fprintf(w, "%s\t%s\t%v\t%s\t%s\t%s\n", pid, ppid, time, rss, state, name)
 	}
 }
