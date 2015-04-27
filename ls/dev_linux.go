@@ -1,12 +1,9 @@
 package main
 
-const (
-	minorbits = 20
-	minormask = (1 << minorbits) - 1
-)
-
-func devNums(dev int32) (major, minor uint32) {
-	major = uint32(dev) >> minorbits
-	minor = uint32(dev) & minormask
+// from github.com/docker/libcontainer/devices/number.go
+func devNums(dev uint64) (major, minor uint32) {
+	num := uint32(dev)
+	major = (num >> 8) & 0xfff
+	minor = (num & 0xff) | ((num >> 12) & 0xfff00)
 	return
 }
