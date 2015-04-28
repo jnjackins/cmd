@@ -97,6 +97,7 @@ func setupLineEditing() (*liner.State, error) {
 	}
 	s := liner.NewLiner()
 	s.SetWordCompleter(complete)
+	s.SetTabCompletionStyle(liner.TabPrints)
 	raw, err = liner.TerminalMode()
 	if err != nil {
 		return nil, err
@@ -126,9 +127,15 @@ func complete(line string, pos int) (string, []string, string) {
 		head = head[:len(head)-len([]rune(word))]
 	}
 	completions, _ := filepath.Glob(word + "*")
+	var prefix string
 	if strings.HasPrefix(word, "./") {
-		for i := range completions {
-			completions[i] = "./" + completions[i]
+		prefix = "./"
+	}
+	for i := range completions {
+		completions[i] = prefix + completions[i]
+		stat, err := os.Stat(completions[i])
+		if err == nil && stat.IsDir() {
+			completions[i] += "/"
 		}
 	}
 	return string(head), completions, string(runes[pos:])
