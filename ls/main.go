@@ -176,7 +176,7 @@ func ls(w io.Writer, info os.FileInfo, dir, target string) {
 		fmt.Fprint(w, info.Name())
 	}
 
-	if target != "" {
+	if *lflag && target != "" {
 		fmt.Fprintf(w, " ￫ %s", target)
 	}
 
