@@ -5,6 +5,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -13,19 +14,29 @@ import (
 
 var elog *log.Logger
 
+var eflag = flag.String("e", "", "Evaluate `expression` instead of reading from file or stdin.")
+
 func main() {
 	elog = log.New(os.Stderr, "hoc: ", 0)
-	flag.Parse()
-	f := os.Stdin
-	args := flag.Args()
-	if len(args) > 0 {
-		var err error
-		f, err = os.Open(args[0])
-		if err != nil {
-			elog.Fatal(err)
-		}
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, "Usage: hoc [ file ... ] [ -e expression ]")
+		flag.PrintDefaults()
 	}
-	parse(f)
+	flag.Parse()
+	if *eflag != "" {
+		parse(strings.NewReader(*eflag))
+	} else {
+		f := os.Stdin
+		args := flag.Args()
+		if len(args) > 0 {
+			var err error
+			f, err = os.Open(args[0])
+			if err != nil {
+				elog.Fatal(err)
+			}
+		}
+		parse(f)
+	}
 }
 
 func parse(r io.Reader) {
