@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"log"
 
+	"sigint.ca/clip"
 	"sigint.ca/graphics/text"
 
 	"golang.org/x/exp/shiny/driver"
@@ -38,6 +39,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	editbuf.Clipboard = &clip.Clipboard{}
 
 	driver.Main(func(s screen.Screen) {
 		scr = s
