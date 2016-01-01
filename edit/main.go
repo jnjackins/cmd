@@ -86,7 +86,7 @@ func eventLoop() error {
 				save()
 			}
 			if e.Direction == key.DirPress || e.Direction == key.DirNone {
-				editbuf.SendKey(e)
+				editbuf.SendKeyEvent(e)
 				win.Send(paint.Event{})
 			}
 
