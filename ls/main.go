@@ -145,9 +145,12 @@ func ls(w io.Writer, info os.FileInfo, dir, target string) {
 
 		// groupname
 		gid := strconv.Itoa(int(stat.Gid))
-		gname, err := group.Name(gid)
+		g, err := group.LookupId(gid)
+		var gname string
 		if err != nil {
 			gname = gid
+		} else {
+			gname = g.Name
 		}
 		fmt.Fprintf(w, "%s \t", gname)
 
