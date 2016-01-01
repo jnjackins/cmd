@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"io"
 	"log"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 func main() {
 	elog := log.New(os.Stderr, "cat: ", 0)
-	flag.Parse()
 	stdout := bufio.NewWriter(os.Stdout)
 	defer stdout.Flush()
 	if len(os.Args) == 1 {
@@ -20,7 +18,7 @@ func main() {
 		}
 		return
 	}
-	for _, fname := range flag.Args() {
+	for _, fname := range os.Args[1:] {
 		f, err := os.Open(fname)
 		if err != nil {
 			elog.Print(err)
