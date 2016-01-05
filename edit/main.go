@@ -95,7 +95,6 @@ func eventLoop() error {
 			win.Send(paint.Event{})
 
 		case paint.Event:
-			win.Fill(image.Rect(0, 0, 2000, 2000), color.RGBA{G: 255, A: 255}, screen.Src)
 			win.Upload(image.ZP, editbuf, editbuf.Bounds())
 			win.Publish()
 
