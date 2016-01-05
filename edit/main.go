@@ -79,6 +79,9 @@ func eventLoop() error {
 	for e := range win.Events() {
 		switch e := e.(type) {
 		case key.Event:
+			if e.Code == key.CodeEscape {
+				return nil
+			}
 			if e.Direction == key.DirPress &&
 				e.Modifiers == key.ModMeta &&
 				e.Code == key.CodeS {
