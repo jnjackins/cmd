@@ -12,7 +12,7 @@ import (
 	"os"
 
 	"sigint.ca/clip"
-	"sigint.ca/graphics/text"
+	"sigint.ca/graphics/editor"
 
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
@@ -26,7 +26,7 @@ import (
 
 var (
 	filename string
-	editbuf  *text.Buffer
+	editbuf  *editor.Buffer
 	scr      screen.Screen
 	win      screen.Window
 	winr     image.Rectangle
@@ -47,7 +47,7 @@ func main() {
 	font := basicfont.Face7x13
 	height := font.Height
 	var err error
-	editbuf = text.NewBuffer(size, font, height, text.AcmeYellowTheme)
+	editbuf = editor.NewBuffer(size, font, height, editor.AcmeYellowTheme)
 	if err != nil {
 		log.Fatal(err)
 	}
