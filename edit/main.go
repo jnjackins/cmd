@@ -26,7 +26,7 @@ import (
 
 var (
 	filename string
-	editbuf  *editor.Buffer
+	editbuf  *editor.Editor
 	scr      screen.Screen
 	win      screen.Window
 	winr     image.Rectangle
@@ -47,7 +47,7 @@ func main() {
 	font := basicfont.Face7x13
 	height := font.Height
 	var err error
-	editbuf = editor.NewBuffer(size, font, height, editor.AcmeYellowTheme)
+	editbuf = editor.NewEditor(size, font, height, editor.AcmeYellowTheme)
 	if err != nil {
 		log.Fatal(err)
 	}
