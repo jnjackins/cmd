@@ -95,7 +95,6 @@ func eventLoop() error {
 			}
 
 		case mouse.Event:
-			log.Println("got mouse event: %v", e)
 			mainEditor.SendMouseEvent(e)
 			win.Send(paint.Event{})
 
