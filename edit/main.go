@@ -25,12 +25,13 @@ import (
 )
 
 var (
-	filename string
-	editbuf  *editor.Editor
-	scr      screen.Screen
-	win      screen.Window
-	winr     image.Rectangle
-	bgColor  = color.White
+	filename   string
+	mainEditor *editor.Editor
+	tagEditor  *editor.Editor
+	scr        screen.Screen
+	win        screen.Window
+	winr       image.Rectangle
+	bgColor    = color.White
 )
 
 func init() {
@@ -47,11 +48,11 @@ func main() {
 	font := basicfont.Face7x13
 	height := font.Height
 	var err error
-	editbuf = editor.NewEditor(size, font, height, editor.AcmeYellowTheme)
+	mainEditor = editor.NewEditor(size, font, height, editor.AcmeYellowTheme)
 	if err != nil {
 		log.Fatal(err)
 	}
-	editbuf.Clipboard = &clip.Clipboard{}
+	mainEditor.Clipboard = &clip.Clipboard{}
 
 	if flag.NArg() == 1 {
 		load(flag.Arg(0))
@@ -89,24 +90,28 @@ func eventLoop() error {
 				save()
 			}
 			if e.Direction == key.DirPress || e.Direction == key.DirNone {
-				editbuf.SendKeyEvent(e)
+				mainEditor.SendKeyEvent(e)
 				win.Send(paint.Event{})
 			}
 
 		case mouse.Event:
-			editbuf.SendMouseEvent(e)
+			log.Println("got mouse event: %v", e)
+			mainEditor.SendMouseEvent(e)
 			win.Send(paint.Event{})
 
 		case paint.Event:
-			win.Upload(image.ZP, editbuf, editbuf.Bounds())
+			win.Upload(image.ZP, mainEditor, mainEditor.Bounds())
 			win.Publish()
 
 		case size.Event:
 			winr = e.Bounds()
-			editbuf.Resize(e.Size())
+			mainEditor.Resize(e.Size())
 			win.Send(paint.Event{})
 
 		case lifecycle.Event:
+			if e.To == lifecycle.StageDead {
+				return nil
+			}
 
 		default:
 			log.Printf("unhandled %T: %[1]v", e)
@@ -126,7 +131,7 @@ func load(s string) {
 		return
 	}
 	buf, err := ioutil.ReadFile(filename)
-	editbuf.Load(buf)
+	mainEditor.Load(buf)
 	f.Close()
 }
 
@@ -139,7 +144,7 @@ func save() {
 	if err != nil {
 		log.Printf("error opening %q for writing: %v", filename, err)
 	}
-	r := bytes.NewBuffer(editbuf.Contents())
+	r := bytes.NewBuffer(mainEditor.Contents())
 	if _, err := io.Copy(f, r); err != nil {
 		log.Printf("error writing to %q: %v", filename, err)
 	}
