@@ -28,7 +28,6 @@ var (
 	filename   string
 	mainEditor *editor.Editor
 	tagEditor  *editor.Editor
-	scr        screen.Screen
 	win        screen.Window
 	winr       image.Rectangle
 	bgColor    = color.White
@@ -44,7 +43,7 @@ func init() {
 }
 
 func main() {
-	size := image.Pt(800, 600)
+	size := image.Pt(1024, 768)
 	font := basicfont.Face7x13
 	height := font.Height
 	var err error
@@ -63,8 +62,8 @@ func main() {
 	}
 
 	driver.Main(func(s screen.Screen) {
-		scr = s
-		if w, err := scr.NewWindow(nil); err != nil {
+		opts := screen.NewWindowOptions{Width: size.X, Height: size.Y}
+		if w, err := s.NewWindow(&opts); err != nil {
 			log.Fatal(err)
 		} else {
 			win = w
@@ -95,12 +94,16 @@ func eventLoop() error {
 			}
 
 		case mouse.Event:
-			mainEditor.SendMouseEvent(e)
-			win.Send(paint.Event{})
+			if e.Direction == mouse.DirPress || e.Direction == mouse.DirNone {
+				mainEditor.SendMouseEvent(e)
+				win.Send(paint.Event{})
+			}
 
 		case paint.Event:
-			win.Upload(image.ZP, mainEditor, mainEditor.Bounds())
-			win.Publish()
+			if !e.External {
+				win.Upload(image.ZP, mainEditor, mainEditor.Bounds())
+				win.Publish()
+			}
 
 		case size.Event:
 			winr = e.Bounds()
