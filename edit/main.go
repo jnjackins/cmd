@@ -11,7 +11,6 @@ import (
 	"log"
 	"os"
 
-	"sigint.ca/clip"
 	"sigint.ca/graphics/editor"
 
 	"golang.org/x/exp/shiny/driver"
@@ -46,12 +45,7 @@ func main() {
 	size := image.Pt(1024, 768)
 	font := basicfont.Face7x13
 	height := font.Height
-	var err error
 	mainEditor = editor.NewEditor(size, font, height, editor.AcmeYellowTheme)
-	if err != nil {
-		log.Fatal(err)
-	}
-	mainEditor.Clipboard = &clip.Clipboard{}
 
 	if flag.NArg() == 1 {
 		load(flag.Arg(0))
