@@ -93,6 +93,10 @@ func eventLoop() error {
 				win.Send(paint.Event{})
 			}
 
+		case mouse.ScrollEvent:
+			mainEditor.SendScrollEvent(e)
+			win.Send(paint.Event{})
+
 		case paint.Event:
 			if !e.External {
 				win.Upload(image.ZP, mainEditor, mainEditor.Bounds())
