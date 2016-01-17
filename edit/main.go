@@ -10,12 +10,15 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"sigint.ca/graphics/editor"
 
 	"golang.org/x/exp/shiny/driver"
 	"golang.org/x/exp/shiny/screen"
+	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
+	"golang.org/x/image/font/plan9font"
 	"golang.org/x/mobile/event/key"
 	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/mouse"
@@ -43,9 +46,8 @@ func init() {
 
 func main() {
 	size := image.Pt(1024, 768)
-	font := basicfont.Face7x13
-	height := font.Height
-	mainEditor = editor.NewEditor(size, font, height, editor.AcmeYellowTheme)
+	font := getfont()
+	mainEditor = editor.NewEditor(size, font, editor.AcmeYellowTheme)
 
 	if flag.NArg() == 1 {
 		load(flag.Arg(0))
@@ -151,4 +153,22 @@ func save() {
 		log.Printf("error writing to %q: %v", filename, err)
 	}
 	f.Close()
+}
+
+func getfont() font.Face {
+	if font := os.Getenv("PLAN9FONT"); font != "" {
+		readFile := func(path string) ([]byte, error) {
+			return ioutil.ReadFile(filepath.Join(filepath.Dir(font), path))
+		}
+		fontData, err := ioutil.ReadFile(font)
+		if err != nil {
+			log.Fatalf("error loading font: %v", err)
+		}
+		face, err := plan9font.ParseFont(fontData, readFile)
+		if err != nil {
+			log.Fatalf("error parsing font: %v", err)
+		}
+		return face
+	}
+	return basicfont.Face7x13
 }
