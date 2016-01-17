@@ -70,8 +70,8 @@ func main() {
 }
 
 func eventLoop() error {
-	for e := range win.Events() {
-		switch e := e.(type) {
+	for {
+		switch e := win.NextEvent().(type) {
 		case key.Event:
 			if e.Code == key.CodeEscape {
 				return nil
@@ -99,8 +99,10 @@ func eventLoop() error {
 
 		case paint.Event:
 			if !e.External {
-				win.Upload(image.ZP, mainEditor, mainEditor.Bounds())
-				win.Publish()
+				if mainEditor.Dirty() {
+					win.Upload(image.ZP, mainEditor, mainEditor.Bounds())
+					win.Publish()
+				}
 			}
 
 		case size.Event:
