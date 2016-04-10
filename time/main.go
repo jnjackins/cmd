@@ -16,22 +16,19 @@ func main() {
 	if len(args) == 0 {
 		fmt.Fprintln(os.Stderr, "Usage: time command")
 		os.Exit(1)
-	} else if len(args) == 1 {
-		cmd = exec.Command(args[0])
-	} else {
-		cmd = exec.Command(args[0], args[1:]...)
 	}
+	cmd = exec.Command(args[0], args[1:]...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	start := time.Now()
 	err := cmd.Run()
 	if err != nil {
-		elog.Print(err)
+		elog.Fatal(err)
 	}
-	real := time.Since(start)
-	user := cmd.ProcessState.UserTime()
-	sys := cmd.ProcessState.SystemTime()
-	fmt.Fprintf(os.Stderr, "%.2fu %.2fs %.2fr", user.Seconds(), sys.Seconds(), real.Seconds())
+	r := time.Since(start)
+	u := cmd.ProcessState.UserTime()
+	s := cmd.ProcessState.SystemTime()
+	fmt.Fprintf(os.Stderr, "%.2fu %.2fs %.2fr", u.Seconds(), s.Seconds(), r.Seconds())
 	fmt.Fprintf(os.Stderr, "\t%s\n", strings.Join(args, " "))
 }
