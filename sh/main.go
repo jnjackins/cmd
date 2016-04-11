@@ -28,6 +28,7 @@ func main() {
 	log.SetFlags(0)
 	setupSignals()
 	setupEnv()
+	loadProfile()
 	flag.Parse()
 	if *lflag != "" {
 		f, err := os.Open(*lflag)
@@ -51,6 +52,16 @@ func main() {
 	} else {
 		parse()
 	}
+}
+
+func loadProfile() {
+	path := os.Getenv("home") + "/lib/profile"
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	parseDumb(f, false)
+	f.Close()
 }
 
 func parseDumb(r io.Reader, tty bool) {
