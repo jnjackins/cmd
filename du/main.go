@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
@@ -14,19 +13,14 @@ var (
 	sflag = flag.Bool("s", false, "Print only a final summary.")
 )
 
-var (
-	elog *log.Logger
-	out  *bufio.Writer
-)
-
 func init() {
-	elog = log.New(os.Stderr, "du: ", 0)
+	log.SetPrefix("du: ")
+	log.SetFlags(0)
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: du [options] [path ...]")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
-	out = bufio.NewWriter(os.Stdout)
 }
 
 func main() {
@@ -37,32 +31,31 @@ func main() {
 	for _, path := range args {
 		du(path)
 	}
-	out.Flush()
 }
 
 func du(path string) {
 	total := walk(path)
 	if *sflag {
-		fmt.Println(total)
+		print(path, total)
 	}
 }
 
 func walk(path string) int64 {
 	fi, err := os.Lstat(path)
 	if err != nil {
-		elog.Print(err)
+		log.Print(err)
 		return 0
 	}
 	var size int64
 	if fi.IsDir() {
 		f, err := os.Open(path)
 		if err != nil {
-			elog.Print(err)
+			log.Print(err)
 			return 0
 		}
 		entries, err := f.Readdirnames(0)
 		if err != nil {
-			elog.Print(err)
+			log.Print(err)
 			return 0
 		}
 		f.Close()
@@ -79,8 +72,5 @@ func walk(path string) int64 {
 }
 
 func print(path string, size int64) {
-	_, err := fmt.Fprintf(out, "%d\t%s\n", size, filepath.Clean(path))
-	if err != nil {
-		elog.Print(err)
-	}
+	fmt.Fprintf(os.Stdout, "%d\t%s\n", size, filepath.Clean(path))
 }
