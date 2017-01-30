@@ -8,8 +8,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 	"text/tabwriter"
 	"time"
+
+	"sigint.ca/user"
 )
 
 var kflag = flag.Bool("k", false, "Show kernel threads (processes with a parent PID of 0).")
@@ -31,15 +34,26 @@ func main() {
 		elog.Fatal(err)
 	}
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-	fmt.Fprintln(w, "PID\tPPID\tTIME\tRSS\tSTATE\tCMD")
+	fmt.Fprintln(w, "PID\tUID\tTIME\tRSS\tSTATE\tCMD")
 	defer w.Flush()
 	for _, pid := range pids {
 		if _, err := strconv.Atoi(pid); err != nil {
 			continue
 		}
-		stat, err := ioutil.ReadFile("/proc/" + pid + "/stat")
+		dir := "/proc/" + pid
+		dirstat, err := os.Stat(dir)
 		if err != nil {
-			elog.Print(err)
+			elog.Println(err)
+			continue
+		}
+		uid := strconv.Itoa(int(dirstat.Sys().(*syscall.Stat_t).Uid))
+		u, err := user.LookupId(uid)
+		if err == nil {
+			uid = u.Username
+		}
+		stat, err := ioutil.ReadFile(dir + "/stat")
+		if err != nil {
+			elog.Println(err)
 			continue
 		}
 		fields := strings.Fields(string(stat))
@@ -51,11 +65,11 @@ func main() {
 		time := time.Second * time.Duration((utime+stime)/tps)
 		rss := fields[23]
 		if !*kflag {
-			// TODO: find a better way to identify kernel threads
+			// could also check for empty /proc/<pid>/cmdline
 			if pid == "2" || ppid == "2" {
 				continue
 			}
 		}
-		fmt.Fprintf(w, "%s\t%s\t%v\t%s\t%s\t%s\n", pid, ppid, time, rss, state, name)
+		fmt.Fprintf(w, "%s\t%s\t%v\t%s\t%s\t%s\n", pid, uid, time, rss, state, name)
 	}
 }
