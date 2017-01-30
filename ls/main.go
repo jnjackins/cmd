@@ -180,7 +180,7 @@ func ls(w io.Writer, info os.FileInfo, dir, target string) {
 	}
 
 	if *lflag && target != "" {
-		fmt.Fprintf(w, " ￫ %s", target)
+		fmt.Fprintf(w, " -> %s", target)
 	}
 
 	fmt.Fprintln(w)
