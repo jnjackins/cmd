@@ -63,7 +63,7 @@ func walk(path string) int64 {
 			size += walk(path + "/" + entry)
 		}
 	} else {
-		size = (fi.Size() + 1023) / 1024
+		size = fi.Size()
 	}
 	if !*sflag && (fi.IsDir() || *aflag) {
 		print(path, size)
@@ -72,5 +72,5 @@ func walk(path string) int64 {
 }
 
 func print(path string, size int64) {
-	fmt.Fprintf(os.Stdout, "%d\t%s\n", size, filepath.Clean(path))
+	fmt.Fprintf(os.Stdout, "%d\t%s\n", (size+512)/1024, filepath.Clean(path))
 }
