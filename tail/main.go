@@ -12,13 +12,9 @@ import (
 var fflag = flag.Bool("f", false, "After printing the tail as usual, follow additions to the file and print them.")
 var nflag = flag.Int("n", 10, "Set the number of `lines` at the end of file to be printed.")
 
-var (
-	f    *os.File
-	elog log.Logger
-)
-
 func init() {
-	elog := log.New(os.Stderr, "tail: ", 0)
+	log.SetPrefix("tailf: ")
+	log.SetFlags(0)
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: tail [options] file")
 		flag.PrintDefaults()
@@ -28,24 +24,25 @@ func init() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	var err error
-	f, err = os.Open(flag.Arg(0))
-	if err != nil {
-		elog.Fatal(err)
-	}
 }
 
 func main() {
-	seek(*nflag)
-	tcopy()
-	for *fflag {
-		time.Sleep(100 * time.Millisecond)
-		tcopy()
+	f, err := os.Open(flag.Arg(0))
+	if err != nil {
+		log.Fatal(err)
+	}
+	seek(f, *nflag)
+	buf := make([]byte, 8192)
+	tcopy(f, buf)
+	if *fflag {
+		for range time.NewTicker(500 * time.Millisecond).C {
+			tcopy(f, buf)
+		}
 	}
 }
 
 // Count n lines backwards from the end of the file.
-func seek(n int) {
+func seek(f *os.File, n int) {
 	// seek to just before the last byte of the file, so we can compare it to '\n'.
 	if _, err := f.Seek(-1, 2); err != nil {
 		return
@@ -60,7 +57,7 @@ func seek(n int) {
 	for {
 		n, err := f.Read(buf)
 		if err != nil {
-			elog.Fatal(err)
+			log.Fatal(err)
 		}
 		pos += int64(n)
 		if buf[0] == '\n' {
@@ -82,9 +79,9 @@ func seek(n int) {
 	}
 }
 
-func tcopy() {
-	_, err := io.Copy(os.Stdout, f)
+func tcopy(f *os.File, buf []byte) {
+	_, err := io.CopyBuffer(os.Stdout, f, buf)
 	if err != nil {
-		elog.Fatal(err)
+		log.Fatal(err)
 	}
 }
