@@ -7,53 +7,64 @@ import (
 	"os"
 	"strconv"
 	"syscall"
+
+	"golang.org/x/sys/unix"
 )
 
 var signals = map[string]syscall.Signal{
-	"HUP":  syscall.SIGHUP,
-	"INT":  syscall.SIGINT,
-	"QUIT": syscall.SIGQUIT,
-	"ILL":  syscall.SIGILL,
-	"ABRT": syscall.SIGABRT,
-	"FPE":  syscall.SIGFPE,
-	"KILL": syscall.SIGKILL,
-	"SEGV": syscall.SIGSEGV,
-	"PIPE": syscall.SIGPIPE,
-	"ALRM": syscall.SIGALRM,
-	"TERM": syscall.SIGTERM,
-	"USR1": syscall.SIGUSR1,
-	"USR2": syscall.SIGUSR2,
-	"CHLD": syscall.SIGCHLD,
-	"CONT": syscall.SIGCONT,
-	"STOP": syscall.SIGSTOP,
-	"TSTP": syscall.SIGTSTP,
-	"TTIN": syscall.SIGTTIN,
-	"TTOU": syscall.SIGTTOU,
+	"HUP":  unix.SIGHUP,
+	"INT":  unix.SIGINT,
+	"QUIT": unix.SIGQUIT,
+	"ILL":  unix.SIGILL,
+	"ABRT": unix.SIGABRT,
+	"FPE":  unix.SIGFPE,
+	"KILL": unix.SIGKILL,
+	"SEGV": unix.SIGSEGV,
+	"PIPE": unix.SIGPIPE,
+	"ALRM": unix.SIGALRM,
+	"TERM": unix.SIGTERM,
+	"USR1": unix.SIGUSR1,
+	"USR2": unix.SIGUSR2,
+	"CHLD": unix.SIGCHLD,
+	"CONT": unix.SIGCONT,
+	"STOP": unix.SIGSTOP,
+	"TSTP": unix.SIGTSTP,
+	"TTIN": unix.SIGTTIN,
+	"TTOU": unix.SIGTTOU,
 }
 
+var sflag = flag.String("s", "TERM", "Specify the `signal` to send.")
+
 func main() {
-	elog := log.New(os.Stderr, "kill: ", 0)
+	log.SetPrefix("kill: ")
+	log.SetFlags(0)
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, "Usage: kill pid [signal]")
+		fmt.Fprintln(os.Stderr, "Usage: kill [-s signal] pid")
+		flag.PrintDefaults()
 	}
 	flag.Parse()
-	if len(flag.Args()) == 0 || len(flag.Args()) > 2 {
+	if flag.NArg() != 1 {
 		flag.Usage()
 		os.Exit(1)
 	}
 	pid, err := strconv.Atoi(flag.Arg(0))
 	if err != nil {
-		elog.Fatal(err)
+		log.Fatal(err)
 	}
-	sig := syscall.SIGTERM
-	if len(flag.Args()) == 2 {
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var sig syscall.Signal
+	if n, err := strconv.Atoi(*sflag); err == nil {
+		sig = syscall.Signal(n)
+	} else {
 		var ok bool
-		if sig, ok = signals[flag.Arg(1)]; !ok {
-			elog.Fatalf("invalid signal: %s", flag.Arg(1))
+		if sig, ok = signals[*sflag]; !ok {
+			log.Fatalf("invalid signal name: %s", *sflag)
 		}
 	}
-	elog.Printf("sending signal #%d to %d\n", sig, pid)
-	if err := syscall.Kill(pid, sig); err != nil {
-		elog.Fatal(err)
+	if err := proc.Signal(sig); err != nil {
+		log.Fatal(err)
 	}
 }
