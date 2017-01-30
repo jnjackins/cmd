@@ -1,33 +1,31 @@
 package main
 
 import (
-	"bufio"
 	"io"
 	"log"
 	"os"
 )
 
 func main() {
-	elog := log.New(os.Stderr, "cat: ", 0)
-	stdout := bufio.NewWriter(os.Stdout)
-	defer stdout.Flush()
+	log.SetPrefix("cat: ")
+	log.SetFlags(0)
 	if len(os.Args) == 1 {
-		_, err := io.Copy(stdout, bufio.NewReader(os.Stdin))
-		if err != nil {
-			elog.Print(err)
-		}
-		return
+		os.Args = append(os.Args, "/dev/stdin")
 	}
-	for _, fname := range os.Args[1:] {
-		f, err := os.Open(fname)
+	var errc int
+	for _, path := range os.Args[1:] {
+		f, err := os.Open(path)
 		if err != nil {
-			elog.Print(err)
+			log.Print(err)
+			errc++
+			continue
 		}
-		fbuf := bufio.NewReader(f)
-		_, err = io.Copy(stdout, fbuf)
+		_, err = io.Copy(os.Stdout, f)
 		if err != nil {
-			elog.Print(err)
+			log.Print(err)
+			errc++
 		}
 		f.Close()
 	}
+	os.Exit(errc)
 }
