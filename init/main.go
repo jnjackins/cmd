@@ -9,12 +9,13 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
+	"time"
 
 	sys "golang.org/x/sys/unix"
 )
 
 const (
-	ntty    = 6
+	ntty    = 6 // TODO: launch gettys automatically?
 	shell   = "/bin/sh"
 	runc    = "/etc/rc"
 	dev     = "/dev/"
@@ -47,57 +48,35 @@ func main() {
 }
 
 func run() {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Printf("recovered from panic: %v\n", r)
-		}
-	}()
-
 	type stage struct {
 		name string
 		fn   func() error
 	}
 	for _, s := range []stage{
-		// In case of a panic recovery, starting with
-		// the shutdown phase ensures proper cleanup.
-		{"shutdown", shutdown},
 		{"single-user", single},
 		{"runcom", runcom},
 		{"multi-user", multiple},
+		{"shutdown", shutdown},
 	} {
-		log.Printf("starting phase %s\n", s.name)
+		log.Printf("starting phase %s", s.name)
 		if err := s.fn(); err != nil {
-			log.Printf("stage %s: %v\n", s.name, err)
+			log.Printf("stage %s: %v", s.name, err)
 			return
 		}
 	}
 }
 
 func shutdown() error {
-	log.Println("killing tty sessions")
-	for _, s := range sessions {
-		s.close()
-	}
-
 	log.Println("killing all processes")
 	for i := 0; i < 5; i++ {
 		sys.Kill(-1, sys.SIGKILL)
 	}
-	for wait(-1) == nil {
+	var err error
+	for err == nil {
+		_, err = sys.Wait4(-1, nil, 0, nil)
 	}
 
-	log.Println("closing open file descriptors")
-	for i := 0; i < 10; i++ {
-		if i != int(cons.Fd()) {
-			sys.Close(i)
-		}
-	}
 	return nil
-}
-
-func wait(pid int) error {
-	_, err := sys.Wait4(pid, nil, 0, nil)
-	return err
 }
 
 func single() error {
@@ -123,18 +102,23 @@ func multiple() error {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, sys.SIGHUP)
 
+	quit := make(chan bool, 1)
+	go reap(quit)
+
 	// start TTY sessions
 	sessionWg = sync.WaitGroup{}
 	for i := 1; i < ntty; i++ {
-		log.Printf("starting session on tty%d\n", i+1)
+		log.Printf("starting session on tty%d", i+1)
 		sessions[i] = newSession(i)
 		go sessions[i].getty()
 	}
 
-	// wait for SIGHUP
-	<-c
-	log.Println("received SIGHUP")
+	<-c // wait for SIGHUP
 	signal.Ignore(sys.SIGHUP)
+	log.Println("received SIGHUP")
+
+	// kill reap goroutine
+	quit <- true
 
 	// close all sessions
 	for i := 1; i < ntty; i++ {
@@ -177,14 +161,14 @@ func (s *session) getty() {
 	for {
 		select {
 		case <-s.quit:
-			log.Printf("%v: exiting\n", s)
+			log.Printf("%v: exiting", s)
 			sessionWg.Done()
 			return
 		default:
 			path := dev + s.tty
 			f, err := os.OpenFile(path, os.O_RDWR, 0)
 			if err != nil {
-				log.Printf("%v: open %s: %v\n", s, path, err)
+				log.Printf("%v: open %s: %v", s, path, err)
 				break
 			}
 			f.Chown(0, 0)
@@ -203,7 +187,7 @@ func (s *session) getty() {
 				},
 			}
 			if err := cmd.Start(); err != nil {
-				log.Printf("%v: start login: %v\n", s, err)
+				log.Printf("%v: start login: %v", s, err)
 				f.Close()
 				// we're in trouble; return to single-user mode.
 				sys.Kill(1, sys.SIGHUP)
@@ -212,7 +196,7 @@ func (s *session) getty() {
 			s.proc = cmd.Process
 			f.Close()
 			if err := cmd.Wait(); err != nil {
-				log.Printf("%v: wait login: %v\n", s, err)
+				log.Printf("%v: wait login: %v", s, err)
 			}
 		}
 	}
@@ -227,5 +211,30 @@ func (s *session) close() {
 	}
 	if s.proc != nil {
 		s.proc.Kill()
+	}
+}
+
+func reap(quit <-chan bool) {
+	log.Println("reap: starting")
+	ticker := time.NewTicker(1 * time.Minute)
+	for {
+		select {
+		case <-quit:
+			ticker.Stop()
+			log.Println("reap: exiting")
+			return
+		case <-ticker.C:
+			for {
+				pid, err := sys.Wait4(-1, nil, sys.WNOHANG, nil)
+				if err != nil {
+					log.Printf("reap: wait: %v", err)
+					break
+				}
+				if pid == 0 {
+					break
+				}
+				log.Printf("reaped process: pid=%d", pid)
+			}
+		}
 	}
 }
