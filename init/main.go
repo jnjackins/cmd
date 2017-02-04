@@ -195,9 +195,7 @@ func (s *session) getty() {
 			}
 			s.proc = cmd.Process
 			f.Close()
-			if err := cmd.Wait(); err != nil {
-				log.Printf("%v: wait login: %v", s, err)
-			}
+			cmd.Wait()
 		}
 	}
 }
@@ -233,7 +231,6 @@ func reap(quit <-chan bool) {
 				if pid == 0 {
 					break
 				}
-				log.Printf("reaped process: pid=%d", pid)
 			}
 		}
 	}
