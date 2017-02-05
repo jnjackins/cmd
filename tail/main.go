@@ -28,47 +28,58 @@ func main() {
 		os.Exit(1)
 	}
 
-	// can't seek stdin; read it all and print a slice of it
-	if flag.NArg() == 0 {
-		buf, err := ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			log.Fatal(err)
-		}
-		sep := []byte("\n")
-		p := buf
-		i := len(p) - 1
-		for lines := 0; lines <= *nflag; lines++ {
-			i = bytes.LastIndex(p, sep)
-			if i < 0 {
-				break
-			}
-			p = p[:i]
-		}
-		i += 1 // don't print the newline itself
-		os.Stdout.Write(buf[i:])
-		return
+	path := "/dev/stdin"
+	if flag.NArg() == 1 {
+		path = flag.Arg(1)
 	}
-
-	f, err := os.Open(flag.Arg(0))
+	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
-	seek(f, *nflag)
-	buf := make([]byte, 8192)
-	tcopy(f, buf)
-	if *fflag {
-		for range time.NewTicker(500 * time.Millisecond).C {
-			tcopy(f, buf)
+
+	// try seek to the last byte of the file
+	if pos, err := f.Seek(-1, 2); err != nil || pos < 0 {
+		// couldn't seek, read the whole thing and traverse backwards
+		buf, err := getbuf(f, *nflag)
+		if err != nil {
+			log.Fatalf("getbuf: %v", err)
+		}
+		os.Stdout.Write(buf)
+	} else {
+		if err := backtrack(f, *nflag); err != nil {
+			log.Fatalf("backtrack: %v", err)
+		}
+		buf := make([]byte, 8192)
+		io.CopyBuffer(os.Stdout, f, buf)
+		if *fflag {
+			for range time.NewTicker(500 * time.Millisecond).C {
+				io.CopyBuffer(os.Stdout, f, buf)
+			}
 		}
 	}
 }
 
-// Count n lines backwards from the end of the file.
-func seek(f *os.File, n int) {
-	// seek to just before the last byte of the file, so we can compare it to '\n'.
-	if _, err := f.Seek(-1, 2); err != nil {
-		return
+func getbuf(f *os.File, n int) ([]byte, error) {
+	buf, err := ioutil.ReadAll(f)
+	if err != nil && err != io.EOF {
+		return nil, err
 	}
+	sep := []byte("\n")
+	p := buf
+	i := len(p) - 1
+	for lines := 0; lines <= *nflag; lines++ {
+		i = bytes.LastIndex(p, sep)
+		if i < 0 {
+			break
+		}
+		p = p[:i]
+	}
+	i += 1 // don't need the leading newline
+	return buf[i:], nil
+}
+
+// Count n lines backwards from the end of the file.
+func backtrack(f *os.File, n int) error {
 	buf := make([]byte, 1)
 
 	// stop only after encountering the *nflag+1th newline, so that the line
@@ -79,7 +90,7 @@ func seek(f *os.File, n int) {
 	for {
 		n, err := f.Read(buf)
 		if err != nil {
-			log.Fatal(err)
+			return fmt.Errorf("read byte: %v", err)
 		}
 		pos += int64(n)
 		if buf[0] == '\n' {
@@ -93,17 +104,11 @@ func seek(f *os.File, n int) {
 		if err != nil {
 			// if that fails, at least try to seek back what we just read
 			f.Seek(-1, 1)
-			return
+			return nil
 		}
 		if pos == 0 {
 			break
 		}
 	}
-}
-
-func tcopy(f *os.File, buf []byte) {
-	_, err := io.CopyBuffer(os.Stdout, f, buf)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return nil
 }
