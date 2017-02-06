@@ -15,68 +15,103 @@ func main() {
 	log.SetFlags(0)
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage: %s [interface [verb [arg]]]\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "Verbs:\n")
-		fmt.Fprintf(os.Stderr, "\tup|down\n")
-		fmt.Fprintf(os.Stderr, "\tadd|remove <cidr>\n")
+		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "\tPrint link and routing information.")
+		fmt.Fprintf(os.Stderr, "%s link\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s link <iface>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s link <iface> up|down\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s link <iface> add|del <addr>\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "\tConfigure network interfaces.")
+		fmt.Fprintf(os.Stderr, "%s route\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s route add <dst> <gw>\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "%s route del <dst>\n", os.Args[0])
+		fmt.Fprintln(os.Stderr, "\tConfigure Internet Protocol routes.")
 	}
 	flag.Parse()
 
 	if flag.NArg() == 0 {
-		ifaces, err := net.Interfaces()
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, iface := range ifaces {
-			if err := print(&iface); err != nil {
-				log.Fatal(err)
-			}
-		}
+		fmt.Println("Network Interfaces:")
+		printIfaces()
+		fmt.Println()
+		fmt.Println("Routing Tables:")
+		printRoutes()
 		os.Exit(0)
 	}
 
-	iface, err := net.InterfaceByName(flag.Arg(0))
+	switch flag.Arg(0) {
+	case "link":
+		linkCmd(flag.Args()[1:])
+	case "route":
+		routeCmd(flag.Args()[1:])
+		os.Exit(0)
+	default:
+		flag.Usage()
+		os.Exit(1)
+	}
+}
+
+func linkCmd(args []string) {
+	if len(args) == 0 {
+		printIfaces()
+		os.Exit(0)
+	}
+
+	// all other commands require iface
+	iface, err := net.InterfaceByName(args[0])
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if flag.NArg() == 1 {
-		if err := print(iface); err != nil {
+	if len(args) == 1 {
+		if err := printIface(iface); err != nil {
 			log.Fatal(err)
 		}
 		os.Exit(0)
 	}
 
-	cmd := flag.Arg(1)
+	cmd := args[1]
 	var cmderr error
 	switch cmd {
 	case "up":
 		cmderr = netlink.NetworkLinkUp(iface)
 	case "down":
 		cmderr = netlink.NetworkLinkDown(iface)
-	case "add", "remove":
-		if flag.NArg() < 3 {
+	case "add", "del":
+		if len(args) != 3 {
 			flag.Usage()
 			os.Exit(1)
 		}
-		ip, ipnet, err := net.ParseCIDR(flag.Arg(2))
+		ip, ipnet, err := net.ParseCIDR(args[2])
 		if err != nil {
 			log.Fatal(err)
 		}
 		f := netlink.NetworkLinkAddIp
-		if cmd == "remove" {
+		if cmd == "del" {
 			f = netlink.NetworkLinkDelIp
 		}
 		cmderr = f(iface, ip, ipnet)
 	default:
-		log.Fatalf("invalid verb %s", flag.Arg(1))
+		log.Fatalf("invalid verb %s", cmd)
 	}
 	if cmderr != nil {
 		log.Fatalf("%s: %v", cmd, cmderr)
 	}
 }
 
-func print(iface *net.Interface) error {
+func printIfaces() {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, iface := range ifaces {
+		if err := printIface(&iface); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func printIface(iface *net.Interface) error {
 	fmt.Printf("%s: flags=%v mtu %d\n", iface.Name, iface.Flags, iface.MTU)
 	if iface.HardwareAddr != nil {
 		fmt.Printf("\tether %v\n", iface.HardwareAddr)
