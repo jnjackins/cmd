@@ -12,6 +12,7 @@ Most programs in this repository are minimalist versions of the usual ones, and 
 
 * _hget_ provides similar functionality to curl(1) and wget(1) 
 * _ipconfig_ combines functionality from both ifconfig(8) and route(8)
+* _sub_ provides substitution similar to s/a/b/ commands in sed(1), but using [re2 syntax](https://golang.org/s/re2syntax). Referencing parenthesized submatches in the replacement string with \1, \2, etc. is supported.
 
 ## TODO
 * Provide a VM image
