@@ -97,7 +97,7 @@ func authenticate(u *passwd.Entry) bool {
 	if err != nil {
 		log.Fatalf("failed to read password: %v", err)
 	}
-	return passwd.Authenticate(pw)
+	return u.Authenticate(pw)
 }
 
 func readPw() (string, error) {
