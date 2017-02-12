@@ -48,13 +48,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	entry, fstabErr := readEntry(flag.Arg(0))
-	if fstabErr != nil && !os.IsNotExist(fstabErr) {
-		log.Fatal(fstabErr)
+	entry, err := readEntry(flag.Arg(0))
+	if err != nil && !os.IsNotExist(err) {
+		log.Fatal(err)
 	}
 
 	if entry.mntpt == "" && flag.Arg(1) == "" {
-		log.Print(fstabErr)
 		log.Fatal("mountpoint not specified")
 	} else if flag.Arg(1) != "" {
 		entry.mntpt = flag.Arg(1)
@@ -64,7 +63,6 @@ func main() {
 		entry.fstype = *fstype
 	}
 	if entry.fstype == "" {
-		log.Print(fstabErr)
 		log.Fatal("filesystem type not specified")
 	}
 	if *options != "" {
