@@ -1,6 +1,6 @@
-# Just Add a Kernel
+# Unix userspace programs in Go
 
-This project aims to provide a full, standalone Unix userspace environment implemented in Go.  compatible with the Linux kernel, and hopefully other Unix-like kernels such as FreeBSD.
+This project aims to provide a full, standalone Unix userspace environment implemented in Go. Just add a kernel. Compatible with Linux, and (hopefully) other Unix kernels such as FreeBSD.
 
 ## Why?
 Just for fun. Or see [this paper](http://harmful.cat-v.org/cat-v/unix_prog_design.pdf). Or because it is easier to write correct and understandable programs in Go than in C. You decide!
