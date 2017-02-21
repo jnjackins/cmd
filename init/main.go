@@ -95,8 +95,10 @@ func single() error {
 
 func runcom() error {
 	return (&exec.Cmd{
-		Path: shell,
-		Args: []string{shell, runc},
+		Path:   shell,
+		Args:   []string{shell, runc},
+		Stdout: cons,
+		Stderr: cons,
 	}).Run()
 }
 
