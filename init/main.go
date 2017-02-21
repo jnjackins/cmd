@@ -80,6 +80,9 @@ func shutdown() error {
 }
 
 func single() error {
+	if _, err := exec.LookPath(shell); err != nil {
+		panic("no shell at " + shell)
+	}
 	log.Println("press ctl-d to proceed to multi-user mode")
 	return (&exec.Cmd{
 		Path:   shell,
