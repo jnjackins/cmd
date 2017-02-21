@@ -219,24 +219,28 @@ func (s *session) close() {
 
 func reap(quit <-chan bool) {
 	log.Println("reap: starting")
-	ticker := time.NewTicker(1 * time.Minute)
+	ticker := time.NewTicker(10 * time.Second)
 	for {
+		// reap all zombies
+		for {
+			pid, err := sys.Wait4(-1, nil, sys.WNOHANG, nil)
+			if err != nil {
+				log.Printf("reap: wait: %v", err)
+				break
+			}
+			if pid == 0 {
+				break
+			}
+		}
+
+		// quit, or rest a bit
 		select {
 		case <-quit:
 			ticker.Stop()
 			log.Println("reap: exiting")
 			return
 		case <-ticker.C:
-			for {
-				pid, err := sys.Wait4(-1, nil, sys.WNOHANG, nil)
-				if err != nil {
-					log.Printf("reap: wait: %v", err)
-					break
-				}
-				if pid == 0 {
-					break
-				}
-			}
+			continue
 		}
 	}
 }
