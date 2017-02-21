@@ -2,14 +2,14 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"strings"
-
-	"golang.org/x/sys/unix"
+	"syscall"
 )
 
 var (
@@ -49,8 +49,11 @@ func main() {
 	}
 
 	entry, err := readEntry(flag.Arg(0))
-	if err != nil && !os.IsNotExist(err) {
-		log.Fatal(err)
+	if err != nil {
+		// couln't read fstab entry; assume first arg is devpath
+		entry = &fsEntry{
+			devpath: flag.Arg(0),
+		}
 	}
 
 	if entry.mntpt == "" && flag.Arg(1) == "" {
@@ -69,20 +72,70 @@ func main() {
 		entry.options = strings.Split(*options, ",")
 	}
 
-	var flags uintptr
+	var flags int
+	var data []string
 	for _, s := range entry.options {
 		switch s {
-		case "ro":
-			flags |= unix.MS_RDONLY
-		case "rw":
-			// rw is default
+		case "async":
+			flags |= syscall.MS_ASYNC
+		case "atime":
+			flags &^= syscall.MS_NOATIME
+		case "noatime":
+			flags |= syscall.MS_NOATIME
+		case "defaults":
+			// rw | suid | dev | exec | nouser | async
+			flags = syscall.MS_ASYNC
+		case "dev":
+			flags &^= syscall.MS_NODEV
+		case "nodev":
+			flags |= syscall.MS_NODEV
+		case "diratime":
+			flags &^= syscall.MS_NODIRATIME
+		case "nodiratime":
+			flags |= syscall.MS_NODIRATIME
+		case "dirsync":
+			flags |= syscall.MS_DIRSYNC
+		case "exec":
+			flags &^= syscall.MS_NOEXEC
+		case "iversion":
+			flags |= syscall.MS_I_VERSION
+		case "noiversion":
+			flags &^= syscall.MS_I_VERSION
+		case "mand":
+			flags |= syscall.MS_MANDLOCK
+		case "nomand":
+			flags &^= syscall.MS_MANDLOCK
+		case "relatime":
+			flags |= syscall.MS_RELATIME
+		case "norelatime":
+			flags &^= syscall.MS_RELATIME
+		case "strictatime":
+			flags |= syscall.MS_STRICTATIME
+		case "nostrictatime":
+			flags &^= syscall.MS_STRICTATIME
+		case "suid":
+			flags &^= syscall.MS_NOSUID
+		case "nosuid":
+			flags |= syscall.MS_NOSUID
 		case "remount":
-			flags |= unix.MS_REMOUNT
+			flags |= syscall.MS_REMOUNT
+		case "ro":
+			flags |= syscall.MS_RDONLY
+		case "rw":
+			flags &^= syscall.MS_RDONLY
+		case "sync":
+			flags |= syscall.MS_SYNC
+		case "user":
+			flags &^= syscall.MS_NOUSER
+		case "nouser":
+			flags |= syscall.MS_NOUSER
 		default:
-			log.Printf("unrecognized option %q", s)
+			// assume filesystem-specific option
+			data = append(data, s)
 		}
 	}
-	if err := unix.Mount(entry.devpath, entry.mntpt, entry.fstype, flags, ""); err != nil {
+	err = syscall.Mount(entry.devpath, entry.mntpt, entry.fstype, uintptr(flags), strings.Join(data, ","))
+	if err != nil {
 		log.Fatal(err)
 	}
 }
@@ -99,19 +152,14 @@ func printMounts() error {
 	return nil
 }
 
-func readEntry(devpath string) (*fsEntry, error) {
-	// default is rw if no entry
-	e := fsEntry{
-		devpath: devpath,
-		options: []string{"rw"},
-	}
-
+func readEntry(arg string) (*fsEntry, error) {
 	f, err := os.Open(*fstab)
 	if err != nil {
-		return &e, err
+		return nil, err
 	}
 	defer f.Close()
 
+	var e fsEntry
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -122,17 +170,18 @@ func readEntry(devpath string) (*fsEntry, error) {
 		if len(fields) < 4 {
 			continue
 		}
-		if fields[0] != devpath {
+		if arg != fields[0] && arg != fields[1] {
 			continue
 		}
+		e.devpath = fields[0]
 		e.mntpt = fields[1]
 		e.fstype = fields[2]
 		e.options = strings.Split(fields[3], ",")
-		break
+		return &e, nil
 	}
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
 
-	return &e, nil
+	return nil, errors.New("no entry found")
 }
