@@ -20,6 +20,7 @@ func execute(n node) int {
 		}
 		cmd := exec.Command(path, "-c", t.tree.String())
 		cmd.Args[0] = filepath.Base(cmd.Args[0] + "(fork)")
+		dprintf("forking: %#v", cmd.Args)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -28,7 +29,6 @@ func execute(n node) int {
 			return -1
 		}
 		fmt.Printf("%d\n", cmd.Process.Pid)
-		dprintf("forking: %#v", cmd.Args)
 		return 0
 
 	case *listNode:
@@ -51,10 +51,6 @@ func execute(n node) int {
 			} else {
 				return status
 			}
-		// foo & bar
-		case typeListFork:
-			execute(t.left) // this side forks
-			return execute(t.right)
 
 		default:
 			panic("bad listNode")
@@ -83,6 +79,7 @@ func execute(n node) int {
 			log.Print(err)
 			return -1
 		}
+		dprintf("running simple command: %#v", cmd.Args)
 		cmd.Run()
 		return exitStatus(cmd)
 

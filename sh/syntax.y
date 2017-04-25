@@ -12,7 +12,7 @@ package main
     arg   *argNode
 }
 
-%type <node> list cmd
+%type <node> list cmd line
 %type <pipe> pipe
 %type <redir> item redir
 %type <arg> words
@@ -26,12 +26,14 @@ package main
 %%
 
 tree    : /* empty */
-        | cmd              { execute($1) }
+        | line             { execute($1) }
 
-cmd     : list
-        | cmd '&'          { $$ = &forkNode{typ: typeForkAmp, tree: $1} }
-        | cmd '&' list     { $$ = &listNode{typ: typeListFork, left: &forkNode{typ: typeForkAmp, tree: $1}, right: $3} }
-        | cmd ';' list     { $$ = &listNode{typ: typeListSequence, left: $1, right: $3} }
+line    : list
+        | cmd
+        | cmd line         { $$ = &listNode{typ: typeListSequence, left: $1, right: $2} }
+
+cmd     : list ';'
+        | list '&'         { $$ = &forkNode{tree: $1} }
 
 list    : pipe             { $$ = $1.(node) }
         | list AND pipe    { $$ = &listNode{typ: typeListAnd, left: $1, right: $3} }

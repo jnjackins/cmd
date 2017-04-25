@@ -7,7 +7,6 @@ import (
 
 const (
 	typeListSequence = iota
-	typeListFork
 	typeListAnd
 	typeListOr
 
@@ -56,10 +55,12 @@ func (n *listNode) String() string {
 	var sep string
 	switch n.typ {
 	case typeListSequence:
-		sep = "; "
-	case typeListFork:
-		// left is *forkNode; will print &
-		sep = " "
+		switch n.left.(type) {
+		case *forkNode:
+			sep = " "
+		default:
+			sep = "; "
+		}
 	case typeListAnd:
 		sep = " && "
 	case typeListOr:

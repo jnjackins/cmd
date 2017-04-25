@@ -31,8 +31,8 @@ var shToknames = [...]string{
 	"REDIR",
 	"OR",
 	"AND",
-	"'&'",
 	"';'",
+	"'&'",
 	"'|'",
 	"'('",
 	"')'",
@@ -52,54 +52,54 @@ var shExca = [...]int{
 
 const shPrivate = 57344
 
-const shLast = 27
+const shLast = 26
 
 var shAct = [...]int{
 
-	5, 10, 11, 4, 9, 24, 14, 3, 15, 10,
-	11, 8, 7, 23, 2, 22, 20, 21, 18, 19,
-	13, 12, 17, 16, 9, 1, 6,
+	6, 5, 14, 13, 11, 12, 25, 10, 8, 16,
+	4, 3, 17, 2, 9, 21, 22, 23, 15, 20,
+	18, 19, 24, 10, 1, 7,
 }
 var shPact = [...]int{
 
-	0, -1000, 1, 14, -4, -1000, 3, -1000, 0, 20,
-	0, 0, 0, 0, 0, 9, -7, -1000, 14, 14,
-	-4, -4, -1000, -1000, -1000,
+	3, -1000, -1000, -4, 3, -1, -1000, 7, -1000, 3,
+	19, -1000, -1000, 3, 3, -1000, 3, 18, -6, -4,
+	-1000, -1, -1, -1000, -1000, -1000,
 }
 var shPgo = [...]int{
 
-	0, 7, 14, 3, 26, 0, 12, 25,
+	0, 11, 10, 13, 1, 25, 0, 8, 24,
 }
 var shR1 = [...]int{
 
-	0, 7, 7, 2, 2, 2, 2, 1, 1, 1,
-	3, 3, 5, 5, 4, 4, 6, 6,
+	0, 8, 8, 3, 3, 3, 2, 2, 1, 1,
+	1, 4, 4, 6, 6, 5, 5, 7, 7,
 }
 var shR2 = [...]int{
 
-	0, 0, 1, 1, 2, 3, 3, 1, 3, 3,
-	1, 3, 1, 3, 1, 3, 1, 2,
+	0, 0, 1, 1, 1, 2, 2, 2, 1, 3,
+	3, 1, 3, 1, 3, 1, 3, 1, 2,
 }
 var shChk = [...]int{
 
-	-1000, -7, -2, -1, -3, -5, -4, -6, 11, 4,
-	8, 9, 7, 6, 10, 5, -2, -6, -1, -1,
-	-3, -3, -5, 4, 12,
+	-1000, -8, -3, -1, -2, -4, -6, -5, -7, 11,
+	4, 8, 9, 7, 6, -3, 10, 5, -2, -1,
+	-7, -4, -4, -6, 4, 12,
 }
 var shDef = [...]int{
 
-	1, -2, 2, 3, 7, 10, 12, 14, 0, 16,
-	4, 0, 0, 0, 0, 0, 0, 17, 5, 6,
-	8, 9, 11, 13, 15,
+	1, -2, 2, 3, 4, 8, 11, 13, 15, 0,
+	17, 6, 7, 0, 0, 5, 0, 0, 0, 0,
+	18, 9, 10, 12, 14, 16,
 }
 var shTok1 = [...]int{
 
 	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 8, 3,
+	3, 3, 3, 3, 3, 3, 3, 3, 9, 3,
 	11, 12, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 9,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 8,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -459,82 +459,76 @@ shdefault:
 		{
 			execute(shDollar[1].node)
 		}
-	case 4:
-		shDollar = shS[shpt-2 : shpt+1]
-		//line syntax.y:32
-		{
-			shVAL.node = &forkNode{typ: typeForkAmp, tree: shDollar[1].node}
-		}
 	case 5:
-		shDollar = shS[shpt-3 : shpt+1]
+		shDollar = shS[shpt-2 : shpt+1]
 		//line syntax.y:33
 		{
-			shVAL.node = &listNode{typ: typeListFork, left: &forkNode{typ: typeForkAmp, tree: shDollar[1].node}, right: shDollar[3].node}
-		}
-	case 6:
-		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:34
-		{
-			shVAL.node = &listNode{typ: typeListSequence, left: shDollar[1].node, right: shDollar[3].node}
+			shVAL.node = &listNode{typ: typeListSequence, left: shDollar[1].node, right: shDollar[2].node}
 		}
 	case 7:
-		shDollar = shS[shpt-1 : shpt+1]
+		shDollar = shS[shpt-2 : shpt+1]
 		//line syntax.y:36
+		{
+			shVAL.node = &forkNode{tree: shDollar[1].node}
+		}
+	case 8:
+		shDollar = shS[shpt-1 : shpt+1]
+		//line syntax.y:38
 		{
 			shVAL.node = shDollar[1].pipe.(node)
 		}
-	case 8:
+	case 9:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:37
+		//line syntax.y:39
 		{
 			shVAL.node = &listNode{typ: typeListAnd, left: shDollar[1].node, right: shDollar[3].pipe}
 		}
-	case 9:
+	case 10:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:38
+		//line syntax.y:40
 		{
 			shVAL.node = &listNode{typ: typeListOr, left: shDollar[1].node, right: shDollar[3].pipe}
 		}
-	case 10:
+	case 11:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:40
+		//line syntax.y:42
 		{
 			shVAL.pipe = shDollar[1].redir.(connecter)
 		}
-	case 11:
+	case 12:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:41
+		//line syntax.y:43
 		{
 			shVAL.pipe = &pipeNode{left: shDollar[1].pipe.(connecter), right: shDollar[3].redir.(connecter)}
 		}
-	case 13:
+	case 14:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:44
+		//line syntax.y:46
 		{
 			shVAL.redir = shDollar[1].redir
 			shDollar[1].redir.redirect(shDollar[2].fd, shDollar[3].name)
 		}
-	case 14:
+	case 15:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:46
+		//line syntax.y:48
 		{
 			shVAL.redir = &simpleNode{args: shDollar[1].arg}
 		}
-	case 15:
+	case 16:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:47
+		//line syntax.y:49
 		{
 			shVAL.redir = &parenNode{tree: shDollar[2].node}
 		}
-	case 16:
+	case 17:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:49
+		//line syntax.y:51
 		{
 			shVAL.arg = &argNode{val: shDollar[1].name}
 		}
-	case 17:
+	case 18:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line syntax.y:50
+		//line syntax.y:52
 		{
 			shVAL.arg = &argNode{val: shDollar[1].name}
 			shVAL.arg.next = shDollar[2].arg

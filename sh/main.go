@@ -20,6 +20,10 @@ var (
 func main() {
 	flag.Parse()
 
+	if *debug {
+		shDebug = 3
+	}
+
 	log.SetPrefix("sh: ")
 	log.SetFlags(0)
 
