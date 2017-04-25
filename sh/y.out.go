@@ -463,13 +463,13 @@ shdefault:
 		shDollar = shS[shpt-2 : shpt+1]
 		//line syntax.y:32
 		{
-			shVAL.node = &forkNode{tree: shDollar[1].node}
+			shVAL.node = &forkNode{typ: typeForkAmp, tree: shDollar[1].node}
 		}
 	case 5:
 		shDollar = shS[shpt-3 : shpt+1]
 		//line syntax.y:33
 		{
-			shVAL.node = &listNode{typ: typeListFork, left: &forkNode{tree: shDollar[1].node}, right: shDollar[3].node}
+			shVAL.node = &listNode{typ: typeListFork, left: &forkNode{typ: typeForkAmp, tree: shDollar[1].node}, right: shDollar[3].node}
 		}
 	case 6:
 		shDollar = shS[shpt-3 : shpt+1]

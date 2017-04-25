@@ -5,32 +5,62 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"syscall"
 )
 
 func execute(n node) int {
 	switch t := n.(type) {
+	// foo bar &
+	case *forkNode:
+		path, err := os.Executable()
+		if err != nil {
+			log.Print(err)
+			return -1
+		}
+		cmd := exec.Command(path, "-c", t.tree.String())
+		cmd.Args[0] = filepath.Base(cmd.Args[0] + "(fork)")
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		if err := cmd.Start(); err != nil {
+			log.Print(err)
+			return -1
+		}
+		fmt.Printf("%d\n", cmd.Process.Pid)
+		dprintf("forking: %#v", cmd.Args)
+		return 0
+
 	case *listNode:
 		switch t.typ {
+		// foo; bar
 		case typeListSequence:
 			execute(t.left)
 			return execute(t.right)
+		// foo && bar
 		case typeListAnd:
 			if status := execute(t.left); status == 0 {
 				return execute(t.right)
 			} else {
 				return status
 			}
+		// foo || bar
 		case typeListOr:
 			if status := execute(t.left); status != 0 {
 				return execute(t.right)
 			} else {
 				return status
 			}
+		// foo & bar
+		case typeListFork:
+			execute(t.left) // this side forks
+			return execute(t.right)
+
 		default:
-			panic("TODO")
+			panic("bad listNode")
 		}
 
+	// foo | bar
 	case *pipeNode:
 		r, w, err := os.Pipe()
 		if err != nil {
@@ -46,6 +76,7 @@ func execute(n node) int {
 		defer r.Close()
 		return execute(t.right)
 
+	// foo bar
 	case *simpleNode:
 		cmd, err := t.mkCmd()
 		if err != nil {
@@ -60,7 +91,6 @@ func execute(n node) int {
 		printTree(n)
 		return -1
 	}
-	panic("unreached")
 }
 
 func exitStatus(cmd *exec.Cmd) int {

@@ -29,8 +29,8 @@ tree    : /* empty */
         | cmd              { execute($1) }
 
 cmd     : list
-        | cmd '&'          { $$ = &forkNode{tree: $1} }
-        | cmd '&' list     { $$ = &listNode{typ: typeListFork, left: &forkNode{tree: $1}, right: $3} }
+        | cmd '&'          { $$ = &forkNode{typ: typeForkAmp, tree: $1} }
+        | cmd '&' list     { $$ = &listNode{typ: typeListFork, left: &forkNode{typ: typeForkAmp, tree: $1}, right: $3} }
         | cmd ';' list     { $$ = &listNode{typ: typeListSequence, left: $1, right: $3} }
 
 list    : pipe             { $$ = $1.(node) }
