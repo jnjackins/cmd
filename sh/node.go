@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	typeListSep = iota
+	typeListSequence = iota
 	typeListFork
 	typeListAnd
 	typeListOr
@@ -43,14 +43,14 @@ func (n *pipeNode) setStdin(r io.Reader)  { n.left.setStdin(r) }
 func (n *pipeNode) setStdout(w io.Writer) { n.right.setStdout(w) }
 func (n *pipeNode) setStderr(w io.Writer) { n.right.setStderr(w) }
 
-type cmdNode struct {
-	args *argNode
-	ioNode
-}
-
 type parenNode struct {
 	typ  int
 	tree node
+	ioNode
+}
+
+type simpleNode struct {
+	args *argNode
 	ioNode
 }
 
@@ -90,7 +90,7 @@ func printTree(n node) {
 	case *parenNode:
 		fmt.Printf("%T(%[1]p): %#[1]v\n", t)
 		printTree(t.tree)
-	case *cmdNode:
+	case *simpleNode:
 		fmt.Printf("%T(%[1]p): %#[1]v\n", t)
 		printTree(t.args)
 	case *pipeNode:

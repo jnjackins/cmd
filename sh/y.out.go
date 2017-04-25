@@ -475,7 +475,7 @@ shdefault:
 		shDollar = shS[shpt-3 : shpt+1]
 		//line syntax.y:34
 		{
-			shVAL.node = &listNode{typ: typeListSep, left: shDollar[1].node, right: shDollar[3].node}
+			shVAL.node = &listNode{typ: typeListSequence, left: shDollar[1].node, right: shDollar[3].node}
 		}
 	case 7:
 		shDollar = shS[shpt-1 : shpt+1]
@@ -518,7 +518,7 @@ shdefault:
 		shDollar = shS[shpt-1 : shpt+1]
 		//line syntax.y:46
 		{
-			shVAL.redir = &cmdNode{args: shDollar[1].arg}
+			shVAL.redir = &simpleNode{args: shDollar[1].arg}
 		}
 	case 15:
 		shDollar = shS[shpt-3 : shpt+1]

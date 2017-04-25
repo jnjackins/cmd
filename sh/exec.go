@@ -5,23 +5,37 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"syscall"
 )
 
-func execute(n node) {
+func execute(n node) int {
 	switch t := n.(type) {
-	case *cmdNode:
-		cmd, err := t.mkCmd()
-		if err != nil {
-			log.Print(err)
-			return
+	case *listNode:
+		switch t.typ {
+		case typeListSequence:
+			execute(t.left)
+			return execute(t.right)
+		case typeListAnd:
+			if status := execute(t.left); status == 0 {
+				return execute(t.right)
+			} else {
+				return status
+			}
+		case typeListOr:
+			if status := execute(t.left); status != 0 {
+				return execute(t.right)
+			} else {
+				return status
+			}
+		default:
+			panic("TODO")
 		}
-		cmd.Run()
 
 	case *pipeNode:
 		r, w, err := os.Pipe()
 		if err != nil {
 			log.Print(err)
-			return
+			return -1
 		}
 		t.left.setStdout(w)
 		t.right.setStdin(r)
@@ -29,16 +43,31 @@ func execute(n node) {
 			execute(t.left)
 			w.Close()
 		}()
-		execute(t.right)
-		r.Close()
+		defer r.Close()
+		return execute(t.right)
+
+	case *simpleNode:
+		cmd, err := t.mkCmd()
+		if err != nil {
+			log.Print(err)
+			return -1
+		}
+		cmd.Run()
+		return exitStatus(cmd)
 
 	default:
 		log.Printf("not handled: %T", t)
 		printTree(n)
+		return -1
 	}
+	panic("unreached")
 }
 
-func (c *cmdNode) mkCmd() (*exec.Cmd, error) {
+func exitStatus(cmd *exec.Cmd) int {
+	return cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
+}
+
+func (c *simpleNode) mkCmd() (*exec.Cmd, error) {
 	var args []string
 	for p := c.args; p != nil; p = p.next {
 		args = append(args, p.val)

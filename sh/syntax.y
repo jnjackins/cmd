@@ -31,7 +31,7 @@ tree    : /* empty */
 cmd     : list
         | cmd '&'          { $$ = &forkNode{tree: $1} }
         | cmd '&' list     { $$ = &listNode{typ: typeListFork, left: &forkNode{tree: $1}, right: $3} }
-        | cmd ';' list     { $$ = &listNode{typ: typeListSep, left: $1, right: $3} }
+        | cmd ';' list     { $$ = &listNode{typ: typeListSequence, left: $1, right: $3} }
 
 list    : pipe             { $$ = $1.(node) }
         | list AND pipe    { $$ = &listNode{typ: typeListAnd, left: $1, right: $3} }
@@ -43,7 +43,7 @@ pipe    : redir            { $$ = $1.(connecter) }
 redir   : item
         | item REDIR WORD  { $$ = $1; $1.redirect($2, $3) }
 
-item    : words            { $$ = &cmdNode{args: $1} }
+item    : words            { $$ = &simpleNode{args: $1} }
         | '(' cmd ')'      { $$ = &parenNode{tree: $2} }
 
 words   : WORD             { $$ = &argNode{val: $1} }
