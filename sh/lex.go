@@ -57,17 +57,17 @@ func (x *shLex) getWord(c rune, yylval *shSymType) int {
 	if c != eof {
 		x.peek = c
 	}
-	yylval.name = b.String()
+	yylval.tree = mkWordLeaf(b.String())
 	return WORD
 }
 
 func (x *shLex) getSymbol(c rune, yylval *shSymType) int {
 	switch c {
 	case '<':
-		yylval.fd = 0
+		yylval.tree = mkRedirLeaf(0)
 		return REDIR
 	case '>':
-		yylval.fd = 1
+		yylval.tree = mkRedirLeaf(1)
 		return REDIR
 	case '&':
 		d := x.next()
@@ -96,6 +96,10 @@ func (x *shLex) next() rune {
 	}
 	c, size := utf8.DecodeRune(x.line)
 	x.line = x.line[size:]
+	if c == '#' {
+		// nothing more to do for this line
+		return eof
+	}
 	if c == utf8.RuneError && size == 1 {
 		log.Print("invalid utf8")
 		return x.next()

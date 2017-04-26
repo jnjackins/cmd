@@ -7,21 +7,19 @@ package main
 import __yyfmt__ "fmt"
 
 //line syntax.y:4
-//line syntax.y:6
+//line syntax.y:10
 type shSymType struct {
-	yys   int
-	name  string
-	fd    int
-	node  node
-	redir redirecter
-	pipe  connecter
-	arg   *argNode
+	yys  int
+	tree *treeNode
 }
 
 const WORD = 57346
 const REDIR = 57347
-const OR = 57348
-const AND = 57349
+const SIMPLE = 57348
+const WORDS = 57349
+const PAREN = 57350
+const AND = 57351
+const OR = 57352
 
 var shToknames = [...]string{
 	"$end",
@@ -29,8 +27,11 @@ var shToknames = [...]string{
 	"$unk",
 	"WORD",
 	"REDIR",
-	"OR",
+	"SIMPLE",
+	"WORDS",
+	"PAREN",
 	"AND",
+	"OR",
 	"';'",
 	"'&'",
 	"'|'",
@@ -52,28 +53,28 @@ var shExca = [...]int{
 
 const shPrivate = 57344
 
-const shLast = 26
+const shLast = 25
 
 var shAct = [...]int{
 
-	6, 5, 14, 13, 11, 12, 25, 10, 8, 16,
-	4, 3, 17, 2, 9, 21, 22, 23, 15, 20,
-	18, 19, 24, 10, 1, 7,
+	6, 5, 24, 10, 13, 14, 11, 12, 17, 16,
+	23, 18, 1, 9, 2, 20, 21, 22, 8, 15,
+	7, 3, 4, 0, 19,
 }
 var shPact = [...]int{
 
-	3, -1000, -1000, -4, 3, -1, -1000, 7, -1000, 3,
-	19, -1000, -1000, 3, 3, -1000, 3, 18, -6, -4,
-	-1000, -1, -1, -1000, -1000, -1000,
+	-1, -1000, -1000, -5, -1, -4, 3, -1000, 7, -1,
+	-1000, -1000, -1000, -1, -1, -1000, -1, 6, -1000, -13,
+	-4, -4, 3, -1000, -1000,
 }
 var shPgo = [...]int{
 
-	0, 11, 10, 13, 1, 25, 0, 8, 24,
+	0, 14, 22, 21, 1, 0, 20, 18, 12,
 }
 var shR1 = [...]int{
 
-	0, 8, 8, 3, 3, 3, 2, 2, 1, 1,
-	1, 4, 4, 6, 6, 5, 5, 7, 7,
+	0, 8, 8, 1, 1, 1, 2, 2, 3, 3,
+	3, 4, 4, 5, 5, 6, 6, 7, 7,
 }
 var shR2 = [...]int{
 
@@ -82,35 +83,35 @@ var shR2 = [...]int{
 }
 var shChk = [...]int{
 
-	-1000, -8, -3, -1, -2, -4, -6, -5, -7, 11,
-	4, 8, 9, 7, 6, -3, 10, 5, -2, -1,
-	-7, -4, -4, -6, 4, 12,
+	-1000, -8, -1, -3, -2, -4, -5, -6, -7, 14,
+	4, 11, 12, 9, 10, -1, 13, 5, 4, -1,
+	-4, -4, -5, 4, 15,
 }
 var shDef = [...]int{
 
 	1, -2, 2, 3, 4, 8, 11, 13, 15, 0,
-	17, 6, 7, 0, 0, 5, 0, 0, 0, 0,
-	18, 9, 10, 12, 14, 16,
+	17, 6, 7, 0, 0, 5, 0, 0, 18, 0,
+	9, 10, 12, 14, 16,
 }
 var shTok1 = [...]int{
 
 	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 9, 3,
-	11, 12, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 8,
+	3, 3, 3, 3, 3, 3, 3, 3, 12, 3,
+	14, 15, 3, 3, 3, 3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 11,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 10,
+	3, 3, 3, 3, 13,
 }
 var shTok2 = [...]int{
 
-	2, 3, 4, 5, 6, 7,
+	2, 3, 4, 5, 6, 7, 8, 9, 10,
 }
 var shTok3 = [...]int{
 	0,
@@ -455,83 +456,71 @@ shdefault:
 
 	case 2:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:29
+		//line syntax.y:19
 		{
-			execute(shDollar[1].node)
+			execute(shDollar[1].tree)
 		}
 	case 5:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line syntax.y:33
+		//line syntax.y:23
 		{
-			shVAL.node = &listNode{typ: typeListSequence, left: shDollar[1].node, right: shDollar[2].node}
+			shVAL.tree = mkTree(';', shDollar[1].tree, shDollar[2].tree)
 		}
 	case 7:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line syntax.y:36
+		//line syntax.y:26
 		{
-			shVAL.node = &forkNode{tree: shDollar[1].node}
-		}
-	case 8:
-		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:38
-		{
-			shVAL.node = shDollar[1].pipe.(node)
+			shVAL.tree = mkTree('&', shDollar[1].tree)
 		}
 	case 9:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:39
+		//line syntax.y:29
 		{
-			shVAL.node = &listNode{typ: typeListAnd, left: shDollar[1].node, right: shDollar[3].pipe}
+			shVAL.tree = mkTree(AND, shDollar[1].tree, shDollar[3].tree)
 		}
 	case 10:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:40
+		//line syntax.y:30
 		{
-			shVAL.node = &listNode{typ: typeListOr, left: shDollar[1].node, right: shDollar[3].pipe}
-		}
-	case 11:
-		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:42
-		{
-			shVAL.pipe = shDollar[1].redir.(connecter)
+			shVAL.tree = mkTree(OR, shDollar[1].tree, shDollar[3].tree)
 		}
 	case 12:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:43
+		//line syntax.y:33
 		{
-			shVAL.pipe = &pipeNode{left: shDollar[1].pipe.(connecter), right: shDollar[3].redir.(connecter)}
+			shVAL.tree = mkTree('|', shDollar[1].tree, shDollar[3].tree)
 		}
 	case 14:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:46
+		//line syntax.y:36
 		{
-			shVAL.redir = shDollar[1].redir
-			shDollar[1].redir.redirect(shDollar[2].fd, shDollar[3].name)
+			shVAL.tree = shDollar[1].tree
+			shDollar[1].tree.io.redirs[shDollar[2].tree.int] = shDollar[3].tree.string
 		}
 	case 15:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:48
+		//line syntax.y:38
 		{
-			shVAL.redir = &simpleNode{args: shDollar[1].arg}
+			shVAL.tree = mkSimple(shDollar[1].tree)
 		}
 	case 16:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:49
+		//line syntax.y:39
 		{
-			shVAL.redir = &parenNode{tree: shDollar[2].node}
+			shVAL.tree = mkTree(PAREN, shDollar[2].tree)
 		}
 	case 17:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:51
+		//line syntax.y:41
 		{
-			shVAL.arg = &argNode{val: shDollar[1].name}
+			shVAL.tree = mkTree(WORDS, shDollar[1].tree)
 		}
 	case 18:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line syntax.y:52
+		//line syntax.y:42
 		{
-			shVAL.arg = &argNode{val: shDollar[1].name}
-			shVAL.arg.next = shDollar[2].arg
+			shVAL.tree = shDollar[1].tree
+			shDollar[1].tree.children = append(shDollar[1].tree.children, shDollar[2].tree)
 		}
 	}
 	goto shstack /* stack new state and value */
