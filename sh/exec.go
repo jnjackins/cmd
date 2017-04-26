@@ -68,11 +68,11 @@ func execute(t *treeNode) int {
 		args := expandArgs(t)
 
 		if fn, ok := builtins[args[0]]; ok {
-			if err := fn(args[1:]); err != nil {
+			exit, err := fn(args[1:])
+			if err != nil {
 				log.Printf("%s: %v", args[0], err)
-				return 1
 			}
-			return 0
+			return exit
 		}
 
 		cmd, err := t.mkCmd(args)
@@ -82,7 +82,7 @@ func execute(t *treeNode) int {
 		}
 		dprintf("running simple command: %#v", cmd.Args)
 		cmd.Run()
-		return exitStatus(cmd)
+		return exitStatus(cmd.ProcessState)
 
 	default:
 		log.Printf("not implemented")
@@ -90,8 +90,8 @@ func execute(t *treeNode) int {
 	}
 }
 
-func exitStatus(cmd *exec.Cmd) int {
-	return cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
+func exitStatus(state *os.ProcessState) int {
+	return state.Sys().(syscall.WaitStatus).ExitStatus()
 }
 
 func expandArgs(t *treeNode) []string {
