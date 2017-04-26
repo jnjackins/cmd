@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"syscall"
 )
 
@@ -18,17 +19,11 @@ func execute(t *treeNode) int {
 
 	// foo &
 	case '&':
-		path, err := os.Executable()
+		cmd, err := t.mkFork()
 		if err != nil {
 			log.Print(err)
 			return -1
 		}
-		cmd := exec.Command(path, "-c", t.children[0].String())
-		cmd.Args[0] = filepath.Base(cmd.Args[0] + "(fork)")
-		dprintf("running forked command: %#v", cmd.Args)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
 		if err := cmd.Start(); err != nil {
 			log.Print(err)
 			return -1
@@ -70,7 +65,17 @@ func execute(t *treeNode) int {
 
 	// foo bar
 	case SIMPLE:
-		cmd, err := t.mkCmd()
+		args := expandArgs(t)
+
+		if fn, ok := builtins[args[0]]; ok {
+			if err := fn(args[1:]); err != nil {
+				log.Printf("%s: %v", args[0], err)
+				return 1
+			}
+			return 0
+		}
+
+		cmd, err := t.mkCmd(args)
 		if err != nil {
 			log.Print(err)
 			return -1
@@ -89,14 +94,26 @@ func exitStatus(cmd *exec.Cmd) int {
 	return cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus()
 }
 
-func (t *treeNode) mkCmd() (*exec.Cmd, error) {
+func expandArgs(t *treeNode) []string {
+	var args []string
+	for _, n := range t.children {
+		if strings.ContainsAny(n.string, "[?*") {
+			matches, err := filepath.Glob(n.string)
+			if err == nil {
+				args = append(args, matches...)
+				continue
+			}
+		}
+		args = append(args, n.string)
+	}
+	return args
+}
+
+func (t *treeNode) mkCmd(args []string) (*exec.Cmd, error) {
 	if t.typ != SIMPLE {
 		panic("mkCmd: bad node type")
 	}
-	var args []string
-	for _, n := range t.children {
-		args = append(args, n.string)
-	}
+
 	path, err := exec.LookPath(args[0])
 	if err != nil {
 		return nil, fmt.Errorf("%s: command not found", args[0])
@@ -145,4 +162,18 @@ func (t *treeNode) mkCmd() (*exec.Cmd, error) {
 		cmd.Stderr = os.Stderr
 	}
 	return &cmd, nil
+}
+
+func (t *treeNode) mkFork() (*exec.Cmd, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return nil, err
+	}
+	cmd := exec.Command(path, "-c", t.children[0].String())
+	cmd.Args[0] = filepath.Base(cmd.Args[0] + "(fork)")
+	dprintf("running forked command: %#v", cmd.Args)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd, nil
 }
