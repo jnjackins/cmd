@@ -20,7 +20,7 @@ var builtins = map[string]func([]string) (int, error){
 
 func cdFn(args []string) (int, error) {
 	if len(args) == 0 {
-		if err := os.Chdir(env["HOME"]); err != nil {
+		if err := os.Chdir(getEnv("HOME")); err != nil {
 			return 1, err
 		}
 		return 0, nil

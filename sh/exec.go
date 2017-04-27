@@ -65,7 +65,16 @@ func execute(t *treeNode) int {
 
 	// foo bar
 	case SIMPLE:
-		args := expandArgs(t)
+		args, vars := expandArgs(t)
+
+		if len(args) == 0 {
+			// only variable assignments
+			for _, v := range vars {
+				parts := strings.SplitN(v, "=", 2)
+				setEnv(parts[0], parts[1])
+			}
+			return 0
+		}
 
 		if fn, ok := builtins[args[0]]; ok {
 			exit, err := fn(args[1:])
@@ -75,7 +84,7 @@ func execute(t *treeNode) int {
 			return exit
 		}
 
-		cmd, err := t.mkCmd(args)
+		cmd, err := t.mkCmd(args, vars)
 		if err != nil {
 			log.Print(err)
 			return -1
@@ -94,9 +103,20 @@ func exitStatus(state *os.ProcessState) int {
 	return state.Sys().(syscall.WaitStatus).ExitStatus()
 }
 
-func expandArgs(t *treeNode) []string {
-	var args []string
+func expandArgs(t *treeNode) (args, vars []string) {
+	prologue := true
 	for _, n := range t.children {
+		// variable assignments
+		if prologue {
+			if i := strings.Index(n.string, "="); i > 0 {
+				vars = append(vars, n.string)
+				continue
+			} else {
+				prologue = false
+			}
+		}
+
+		// regular arguments
 		if strings.ContainsAny(n.string, "[?*") {
 			matches, err := filepath.Glob(n.string)
 			if err == nil {
@@ -106,10 +126,10 @@ func expandArgs(t *treeNode) []string {
 		}
 		args = append(args, n.string)
 	}
-	return args
+	return args, vars
 }
 
-func (t *treeNode) mkCmd(args []string) (*exec.Cmd, error) {
+func (t *treeNode) mkCmd(args, vars []string) (*exec.Cmd, error) {
 	if t.typ != SIMPLE {
 		panic("mkCmd: bad node type")
 	}
@@ -121,6 +141,9 @@ func (t *treeNode) mkCmd(args []string) (*exec.Cmd, error) {
 	cmd := exec.Cmd{
 		Path: path,
 		Args: args,
+	}
+	if len(vars) > 0 {
+		cmd.Env = append(os.Environ(), vars...)
 	}
 
 	if t.io != nil {

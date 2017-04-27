@@ -35,7 +35,7 @@ func setInput(r io.Reader) {
 
 func getLine() ([]byte, error) {
 	if inbuf == nil {
-		s, err := lstate.Prompt(env["PS1"])
+		s, err := lstate.Prompt(getEnv("PS1"))
 		if err != nil {
 			return nil, err
 		}
