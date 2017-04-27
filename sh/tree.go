@@ -33,15 +33,10 @@ func mkSimple(t *treeNode) *treeNode {
 	return t
 }
 
-func mkRedirLeaf(fd int) *treeNode {
+func mkLeaf(typ int, i int, s string) *treeNode {
 	return &treeNode{
-		typ: REDIR,
-		int: fd,
-	}
-}
-
-func mkWordLeaf(s string) *treeNode {
-	return &treeNode{
+		typ:    typ,
+		int:    i,
 		string: s,
 	}
 }

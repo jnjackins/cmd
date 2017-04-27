@@ -92,7 +92,10 @@ func execute(t *treeNode) int {
 			return -1
 		}
 		dprintf("running simple command: %#v", cmd.Args)
-		cmd.Run()
+		if err := cmd.Run(); err != nil {
+			dprintf("run returned error: %v", err)
+			return 1
+		}
 		return exitStatus(cmd.ProcessState)
 
 	default:
@@ -109,6 +112,12 @@ func expandArgs(t *treeNode) (args, vars []string) {
 	prologue := true
 	for _, n := range t.children {
 		s := n.string
+
+		// don't expand quoted text
+		if n.typ == QUOTE {
+			args = append(args, s)
+			continue
+		}
 
 		// variable assignments
 		if prologue {

@@ -3,15 +3,15 @@
 package main
 %}
 
-%term WORD REDIR
+%term WORD QUOTE REDIR
 %term SIMPLE WORDS PAREN
 %left AND OR
 
 %union{
         tree *treeNode
 }
-%type <tree> line cmd list pipe redir item words
-%type <tree> WORD REDIR
+%type <tree> line cmd list pipe redir item words word
+%type <tree> WORD QUOTE REDIR
 
 %%
 
@@ -38,5 +38,8 @@ redir   : item
 item    : words            { $$ = mkSimple($1) }
         | '(' line ')'     { $$ = mkTree(PAREN, $2) }
 
-words   : WORD             { $$ = mkTree(WORDS, $1) }
-        | words WORD       { $$ = $1; $1.children = append($1.children, $2) }
+words   : word             { $$ = mkTree(WORDS, $1) }
+        | words word       { $$ = $1; $1.children = append($1.children, $2) }
+
+word    : WORD
+        | QUOTE

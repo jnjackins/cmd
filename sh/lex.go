@@ -16,40 +16,78 @@ type shLex struct {
 }
 
 func (x *shLex) Lex(yylval *shSymType) int {
+	c := x.next(false)
 	for {
-		c := x.next()
-		if c == eof {
-			return eof
-		}
 		if unicode.IsSpace(c) {
-			continue
+			c = x.next(false)
+		} else {
+			break
 		}
-		if strings.ContainsAny(string(c), "()<>|&;") {
-			return x.getSymbol(c, yylval)
-		}
-		if unicode.IsPrint(c) {
-			return x.getWord(c, yylval)
-		}
-		log.Printf("unrecognized character %q", c)
 	}
+	if c == eof {
+		return eof
+	}
+
+	switch c {
+	case ';', '(', ')':
+		return int(c)
+
+	case '|', '&':
+		d := x.next(false)
+		if d == c {
+			if c == '&' {
+				return AND
+			}
+			if c == '|' {
+				return OR
+			}
+		}
+		x.peek = d
+		return int(c)
+
+	case '<', '>':
+		if c == '<' {
+			yylval.tree = mkLeaf(REDIR, 0, "")
+		} else if c == '>' {
+			yylval.tree = mkLeaf(REDIR, 1, "")
+		}
+		return REDIR
+
+	case '\'':
+		var b bytes.Buffer
+		for {
+			c = x.next(true)
+			if c == eof {
+				panic("TODO: multiline quoted strings")
+			}
+			if c == '\'' {
+				if d := x.next(false); d != '\'' {
+					x.peek = d
+					break
+				}
+			}
+			b.WriteRune(c)
+		}
+
+		yylval.tree = mkLeaf(QUOTE, 0, b.String())
+		return QUOTE
+	}
+
+	// if we made it this far, it's a regular word.
+	return x.readWord(c, yylval)
 }
 
-func (x *shLex) getWord(c rune, yylval *shSymType) int {
-	add := func(b *bytes.Buffer, c rune) {
-		if _, err := b.WriteRune(c); err != nil {
-			log.Fatalf("WriteRune: %s", err)
-		}
-	}
+func (x *shLex) readWord(c rune, yylval *shSymType) int {
 	var b bytes.Buffer
-	add(&b, c)
+	b.WriteRune(c)
 
 	for {
-		c = x.next()
-		if strings.ContainsAny(string(c), "()<>|&;") {
+		c = x.next(false)
+		if strings.ContainsAny(string(c), "()<>|&;'") {
 			break
 		}
 		if unicode.IsPrint(c) && !unicode.IsSpace(c) {
-			add(&b, c)
+			b.WriteRune(c)
 		} else {
 			break
 		}
@@ -57,35 +95,11 @@ func (x *shLex) getWord(c rune, yylval *shSymType) int {
 	if c != eof {
 		x.peek = c
 	}
-	yylval.tree = mkWordLeaf(b.String())
+	yylval.tree = mkLeaf(WORD, 0, b.String())
 	return WORD
 }
 
-func (x *shLex) getSymbol(c rune, yylval *shSymType) int {
-	switch c {
-	case '<':
-		yylval.tree = mkRedirLeaf(0)
-		return REDIR
-	case '>':
-		yylval.tree = mkRedirLeaf(1)
-		return REDIR
-	case '&':
-		d := x.next()
-		if d == '&' {
-			return AND
-		}
-		x.peek = d
-	case '|':
-		d := x.next()
-		if d == '|' {
-			return OR
-		}
-		x.peek = d
-	}
-	return int(c)
-}
-
-func (x *shLex) next() rune {
+func (x *shLex) next(inQuote bool) rune {
 	if x.peek != eof {
 		r := x.peek
 		x.peek = eof
@@ -96,13 +110,13 @@ func (x *shLex) next() rune {
 	}
 	c, size := utf8.DecodeRune(x.line)
 	x.line = x.line[size:]
-	if c == '#' {
+	if c == '#' && !inQuote {
 		// nothing more to do for this line
 		return eof
 	}
 	if c == utf8.RuneError && size == 1 {
 		log.Print("invalid utf8")
-		return x.next()
+		return x.next(inQuote)
 	}
 	return c
 }
