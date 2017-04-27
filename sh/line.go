@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"unicode"
 
 	"github.com/peterh/liner"
 )
@@ -19,7 +20,7 @@ func initPrompt() {
 	lstate = liner.NewLiner()
 	lstate.SetCtrlCAborts(false)
 	lstate.SetTabCompletionStyle(liner.TabPrints)
-	lstate.SetCompleter(dumbComplete)
+	lstate.SetWordCompleter(pathComplete)
 }
 
 func fixTerminal() {
@@ -44,34 +45,42 @@ func getLine() ([]byte, error) {
 	return inbuf.ReadBytes('\n')
 }
 
-// TODO: cache $PATH contents
-func dumbComplete(line string) []string {
-	fields := strings.Fields(line)
-	if len(fields) > 1 {
-		return nil
-	}
-	var prefix string
-	if len(fields) == 0 {
-		prefix = ""
+func pathComplete(line string, pos int) (head string, completions []string, tail string) {
+	headpos := strings.LastIndexFunc(line[:pos], unicode.IsSpace)
+	headpos++
+	head = line[:headpos]
+	tailpos := strings.IndexFunc(line[headpos:], unicode.IsSpace)
+	if tailpos < 0 {
+		tailpos = len(line)
 	} else {
-		prefix = fields[0]
+		tailpos += headpos
 	}
-	var matches []string
-	paths := filepath.SplitList(env["PATH"])
-	for _, d := range paths {
-		if d == "" {
-			d = "."
-		}
-		fi, err := os.Open(d)
-		if err != nil {
-			continue
-		}
-		names, err := fi.Readdirnames(0)
-		for _, name := range names {
-			if strings.HasPrefix(name, prefix) {
-				matches = append(matches, name+" ")
+	prefix := line[headpos:tailpos]
+	tail = line[tailpos:]
+
+	dir, match := filepath.Split(prefix)
+
+	var f *os.File
+	var err error
+	if dir == "" {
+		f, err = os.Open(".")
+	} else {
+		f, err = os.Open(dir)
+	}
+	if err != nil {
+		return
+	}
+	entries, err := f.Readdir(0)
+	dprintf("got entries=%v for dir=%s (prefix=%s, match=%s)", entries, dir, prefix, match)
+	for _, entry := range entries {
+		if strings.HasPrefix(entry.Name(), match) {
+			sep := " "
+			if entry.IsDir() {
+				sep = string(os.PathSeparator)
 			}
+			path := dir + entry.Name() + sep
+			completions = append(completions, path)
 		}
 	}
-	return matches
+	return
 }

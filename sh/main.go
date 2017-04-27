@@ -32,6 +32,12 @@ func main() {
 		setInput(bytes.NewBufferString(*cflag + "\n"))
 	} else {
 		initPrompt()
+		defer func() {
+			if r := recover(); r != nil {
+				fixTerminal()
+				panic(r)
+			}
+		}()
 	}
 	for {
 		line, err := getLine()
