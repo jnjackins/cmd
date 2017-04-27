@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"unicode"
+	"unicode/utf8"
 )
 
 func execute(t *treeNode) int {
@@ -106,27 +108,57 @@ func exitStatus(state *os.ProcessState) int {
 func expandArgs(t *treeNode) (args, vars []string) {
 	prologue := true
 	for _, n := range t.children {
+		s := n.string
+
 		// variable assignments
 		if prologue {
-			if i := strings.Index(n.string, "="); i > 0 {
-				vars = append(vars, n.string)
+			i := strings.Index(s, "=")
+			if i < 0 {
+				prologue = false
+			} else if readVarName(s[:i]) != "" {
+				vars = append(vars, s)
 				continue
 			} else {
 				prologue = false
 			}
 		}
 
-		// regular arguments
-		if strings.ContainsAny(n.string, "[?*") {
-			matches, err := filepath.Glob(n.string)
+		// expand variables
+		if i := strings.Index(s, "$"); i >= 0 {
+			name := readVarName(s[i+len("$"):])
+			s = s[:i] + getEnv(name) + s[i+len("$")+len(name):]
+		}
+
+		// expand globs
+		if strings.ContainsAny(s, "[?*") {
+			matches, err := filepath.Glob(s)
 			if err == nil {
 				args = append(args, matches...)
 				continue
 			}
 		}
-		args = append(args, n.string)
+		args = append(args, s)
 	}
 	return args, vars
+}
+
+func readVarName(s string) string {
+	if len(s) == 0 {
+		return ""
+	}
+	c, _ := utf8.DecodeRuneInString(s)
+	if unicode.IsNumber(c) {
+		return ""
+	}
+	var name string
+	for _, c := range s {
+		if unicode.IsLetter(c) || unicode.IsNumber(c) || c == '_' {
+			name += string(c)
+			continue
+		}
+		return name
+	}
+	return name
 }
 
 func (t *treeNode) mkCmd(args, vars []string) (*exec.Cmd, error) {
