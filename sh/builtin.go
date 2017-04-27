@@ -49,14 +49,14 @@ func execFn(args []string) (int, error) {
 
 func exitFn(args []string) (int, error) {
 	if len(args) == 0 {
-		os.Exit(0)
+		exit(0)
 	}
 	i, err := strconv.Atoi(args[0])
 	if err == nil {
-		os.Exit(i)
+		exit(i)
 	}
 	log.Printf("%s: bad number", args[0])
-	os.Exit(1)
+	exit(1)
 
 	// not reached
 	return 0, nil

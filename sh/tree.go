@@ -6,11 +6,11 @@ import (
 )
 
 type treeNode struct {
-	typ      int         // for all nodes
-	int      int         // for redirect nodes
-	string   string      // for arg nodes
-	io       *ioSpec     // for simple, paren, and pipe nodes
-	children []*treeNode // for all nodes except arg
+	typ      int
+	int      int
+	string   string
+	io       *ioSpec
+	children []*treeNode
 }
 
 type ioSpec struct {
@@ -52,7 +52,7 @@ func (n *treeNode) String() string {
 	case ';':
 		sep := "; "
 		if n.children[0].typ == '&' {
-			sep = ""
+			sep = " "
 		}
 		s = fmt.Sprintf("%v%s%v", n.children[0], sep, n.children[1])
 	case '&':

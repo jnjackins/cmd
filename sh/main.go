@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"flag"
 	"io"
@@ -29,27 +28,19 @@ func main() {
 
 	setupEnv()
 
-	var input io.Reader = os.Stdin
-	prompt := true
 	if *cflag != "" {
-		input = bytes.NewBufferString(*cflag + "\n")
-		prompt = false
+		setInput(bytes.NewBufferString(*cflag + "\n"))
+	} else {
+		initPrompt()
 	}
-	in := bufio.NewReader(input)
 	for {
-		if prompt {
-			if _, err := os.Stdout.WriteString(env["PS1"]); err != nil {
-				log.Fatalf("WriteString: %s", err)
-			}
-		}
-		line, err := in.ReadBytes('\n')
+		line, err := getLine()
 		if err == io.EOF {
-			return
+			exit(0)
 		}
 		if err != nil {
-			log.Fatalf("ReadBytes: %s", err)
+			log.Fatal(err)
 		}
-
 		shParse(&shLex{line: line})
 	}
 }
@@ -58,4 +49,9 @@ func dprintf(format string, args ...interface{}) {
 	if *debug {
 		log.Printf("debug: "+format, args...)
 	}
+}
+
+func exit(i int) {
+	fixTerminal()
+	os.Exit(i)
 }
