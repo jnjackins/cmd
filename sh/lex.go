@@ -95,7 +95,27 @@ func (x *shLex) readWord(c rune, yylval *shSymType) int {
 	if c != eof {
 		x.peek = c
 	}
-	yylval.tree = mkLeaf(WORD, 0, b.String())
+
+	s := b.String()
+
+	switch s {
+	case "if":
+		return IF
+	case "then":
+		return THEN
+	case "fi":
+		return FI
+	case "for":
+		return FOR
+	case "in":
+		return IN
+	case "do":
+		return DO
+	case "done":
+		return DONE
+	}
+
+	yylval.tree = mkLeaf(WORD, 0, s)
 	return WORD
 }
 

@@ -67,7 +67,7 @@ func execute(t *treeNode) int {
 
 	// foo bar
 	case SIMPLE:
-		args, vars := expandArgs(t)
+		args, vars := expandArgs(t, true)
 
 		if len(args) == 0 {
 			// only variable assignments
@@ -98,8 +98,23 @@ func execute(t *treeNode) int {
 		}
 		return exitStatus(cmd.ProcessState)
 
+	case IF:
+		if execute(t.children[0]) == 0 {
+			return execute(t.children[1])
+		}
+		return 0
+
+	case FOR:
+		assign := t.children[0].string
+		in, _ := expandArgs(t.children[1], false)
+		for _, s := range in {
+			setEnv(assign, s)
+			execute(t.children[2])
+		}
+		return 0
+
 	default:
-		log.Printf("not implemented")
+		log.Printf("not implemented: %#v", t)
 		return -1
 	}
 }
@@ -108,7 +123,7 @@ func exitStatus(state *os.ProcessState) int {
 	return state.Sys().(syscall.WaitStatus).ExitStatus()
 }
 
-func expandArgs(t *treeNode) (args, vars []string) {
+func expandArgs(t *treeNode, doAssignments bool) (args, vars []string) {
 	prologue := true
 	for _, n := range t.children {
 		s := n.string

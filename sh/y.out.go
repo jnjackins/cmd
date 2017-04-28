@@ -7,25 +7,39 @@ package main
 import __yyfmt__ "fmt"
 
 //line syntax.y:4
-//line syntax.y:10
+//line syntax.y:11
 type shSymType struct {
 	yys  int
 	tree *treeNode
 }
 
-const WORD = 57346
-const QUOTE = 57347
-const REDIR = 57348
-const SIMPLE = 57349
-const WORDS = 57350
-const PAREN = 57351
-const AND = 57352
-const OR = 57353
+const IF = 57346
+const THEN = 57347
+const FI = 57348
+const FOR = 57349
+const IN = 57350
+const DO = 57351
+const DONE = 57352
+const WORD = 57353
+const QUOTE = 57354
+const REDIR = 57355
+const SIMPLE = 57356
+const WORDS = 57357
+const PAREN = 57358
+const AND = 57359
+const OR = 57360
 
 var shToknames = [...]string{
 	"$end",
 	"error",
 	"$unk",
+	"IF",
+	"THEN",
+	"FI",
+	"FOR",
+	"IN",
+	"DO",
+	"DONE",
 	"WORD",
 	"QUOTE",
 	"REDIR",
@@ -51,71 +65,87 @@ var shExca = [...]int{
 	-1, 1,
 	1, -1,
 	-2, 0,
+	-1, 34,
+	5, 3,
+	6, 3,
+	10, 3,
+	-2, 8,
 }
 
 const shPrivate = 57344
 
-const shLast = 28
+const shLast = 58
 
 var shAct = [...]int{
 
-	6, 5, 11, 12, 26, 15, 16, 13, 14, 19,
-	18, 2, 25, 9, 10, 1, 17, 22, 23, 24,
-	8, 21, 7, 20, 11, 12, 3, 4,
+	24, 12, 8, 32, 10, 20, 21, 11, 6, 31,
+	22, 13, 14, 17, 18, 34, 16, 5, 17, 18,
+	15, 16, 9, 13, 14, 13, 14, 35, 27, 30,
+	43, 40, 41, 36, 37, 28, 29, 39, 33, 38,
+	22, 1, 42, 25, 3, 26, 4, 2, 3, 7,
+	4, 0, 19, 3, 0, 4, 0, 23,
 }
 var shPact = [...]int{
 
-	-2, -1000, -1000, -5, -2, -4, 3, -1000, 20, -2,
-	-1000, -1000, -1000, -1000, -1000, -2, -2, -1000, -2, 8,
-	-1000, -12, -4, -4, 3, -1000, -1000,
+	0, -1000, -1000, 1, 0, -16, -7, -1000, 14, 0,
+	0, 17, -1000, -1000, -1000, -1000, -1000, 0, 0, -1000,
+	0, -2, -1000, -20, 33, -4, 0, 25, -16, -16,
+	-7, -1000, -1000, 0, -1000, -1000, 14, 31, 12, -1000,
+	23, 0, 20, -1000,
 }
 var shPgo = [...]int{
 
-	0, 11, 27, 26, 1, 0, 22, 20, 14, 15,
+	0, 0, 47, 45, 43, 17, 8, 49, 2, 1,
+	41,
 }
 var shR1 = [...]int{
 
-	0, 9, 9, 1, 1, 1, 2, 2, 3, 3,
-	3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
-	8,
+	0, 10, 10, 1, 1, 2, 2, 2, 3, 3,
+	4, 4, 4, 5, 5, 6, 6, 7, 7, 7,
+	7, 8, 8, 9, 9,
 }
 var shR2 = [...]int{
 
-	0, 0, 1, 1, 1, 2, 2, 2, 1, 3,
-	3, 1, 3, 1, 3, 1, 3, 1, 2, 1,
-	1,
+	0, 0, 1, 2, 2, 1, 1, 2, 2, 2,
+	1, 3, 3, 1, 3, 1, 3, 1, 3, 5,
+	8, 1, 2, 1, 1,
 }
 var shChk = [...]int{
 
-	-1000, -9, -1, -3, -2, -4, -5, -6, -7, 15,
-	-8, 4, 5, 12, 13, 10, 11, -1, 14, 6,
-	-8, -1, -4, -4, -5, 4, 16,
+	-1000, -10, -2, -4, -3, -5, -6, -7, -8, 22,
+	4, 7, -9, 11, 12, 19, 20, 17, 18, -2,
+	21, 13, -9, -2, -1, -4, -3, 11, -5, -5,
+	-6, 11, 23, 5, 19, -1, 8, -1, -8, 6,
+	19, 9, -1, 10,
 }
 var shDef = [...]int{
 
-	1, -2, 2, 3, 4, 8, 11, 13, 15, 0,
-	17, 19, 20, 6, 7, 0, 0, 5, 0, 0,
-	18, 0, 9, 10, 12, 14, 16,
+	1, -2, 2, 5, 6, 10, 13, 15, 17, 0,
+	0, 0, 21, 23, 24, 8, 9, 0, 0, 7,
+	0, 0, 22, 0, 0, 0, 0, 0, 11, 12,
+	14, 16, 18, 0, -2, 4, 0, 0, 0, 19,
+	0, 0, 0, 20,
 }
 var shTok1 = [...]int{
 
 	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 13, 3,
-	15, 16, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 12,
+	3, 3, 3, 3, 3, 3, 3, 3, 20, 3,
+	22, 23, 3, 3, 3, 3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 19,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 14,
+	3, 3, 3, 3, 21,
 }
 var shTok2 = [...]int{
 
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+	12, 13, 14, 15, 16, 17, 18,
 }
 var shTok3 = [...]int{
 	0,
@@ -460,68 +490,86 @@ shdefault:
 
 	case 2:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:19
+		//line syntax.y:21
 		{
 			execute(shDollar[1].tree)
 		}
-	case 5:
+	case 4:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line syntax.y:23
+		//line syntax.y:26
 		{
 			shVAL.tree = mkTree(';', shDollar[1].tree, shDollar[2].tree)
 		}
 	case 7:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line syntax.y:26
+		//line syntax.y:30
+		{
+			shVAL.tree = mkTree(';', shDollar[1].tree, shDollar[2].tree)
+		}
+	case 9:
+		shDollar = shS[shpt-2 : shpt+1]
+		//line syntax.y:33
 		{
 			shVAL.tree = mkTree('&', shDollar[1].tree)
 		}
-	case 9:
+	case 11:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:29
+		//line syntax.y:36
 		{
 			shVAL.tree = mkTree(AND, shDollar[1].tree, shDollar[3].tree)
 		}
-	case 10:
+	case 12:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:30
+		//line syntax.y:37
 		{
 			shVAL.tree = mkTree(OR, shDollar[1].tree, shDollar[3].tree)
 		}
-	case 12:
+	case 14:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:33
+		//line syntax.y:40
 		{
 			shVAL.tree = mkTree('|', shDollar[1].tree, shDollar[3].tree)
 		}
-	case 14:
+	case 16:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:36
+		//line syntax.y:43
 		{
 			shVAL.tree = shDollar[1].tree
 			shDollar[1].tree.io.redirs[shDollar[2].tree.int] = shDollar[3].tree.string
 		}
-	case 15:
+	case 17:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:38
+		//line syntax.y:45
 		{
 			shVAL.tree = mkSimple(shDollar[1].tree)
 		}
-	case 16:
+	case 18:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:39
+		//line syntax.y:46
 		{
 			shVAL.tree = mkTree(PAREN, shDollar[2].tree)
 		}
-	case 17:
+	case 19:
+		shDollar = shS[shpt-5 : shpt+1]
+		//line syntax.y:47
+		{
+			shVAL.tree = mkTree(IF, shDollar[2].tree, shDollar[4].tree)
+		}
+	case 20:
+		shDollar = shS[shpt-8 : shpt+1]
+		//line syntax.y:48
+		{
+			shVAL.tree = mkTree(FOR, shDollar[2].tree, shDollar[4].tree, shDollar[7].tree)
+		}
+	case 21:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:41
+		//line syntax.y:50
 		{
 			shVAL.tree = mkTree(WORDS, shDollar[1].tree)
 		}
-	case 18:
+	case 22:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line syntax.y:42
+		//line syntax.y:51
 		{
 			shVAL.tree = shDollar[1].tree
 			shDollar[1].tree.children = append(shDollar[1].tree.children, shDollar[2].tree)
