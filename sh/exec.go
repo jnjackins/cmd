@@ -56,8 +56,8 @@ func execute(t *treeNode) int {
 			log.Print(err)
 			return -1
 		}
-		t.children[0].io.stdout = w
-		t.children[1].io.stdin = r
+		t.children[0].io.pipeOut = w
+		t.children[1].io.pipeIn = r
 		go func() {
 			execute(t.children[0])
 			w.Close()
@@ -67,7 +67,7 @@ func execute(t *treeNode) int {
 
 	// foo bar
 	case SIMPLE:
-		args, vars := expandArgs(t, true)
+		args, vars := expandArgs(t.children[0], true)
 
 		if len(args) == 0 {
 			// only variable assignments
@@ -203,29 +203,31 @@ func (t *treeNode) mkCmd(args, vars []string) (*exec.Cmd, error) {
 	}
 
 	if t.io != nil {
-		cmd.Stdin = t.io.stdin
-		cmd.Stdout = t.io.stdout
-		cmd.Stderr = t.io.stderr
-		for fd, path := range t.io.redirs {
+		cmd.Stdin = t.io.pipeIn
+		cmd.Stdout = t.io.pipeOut
+		for fd, redir := range t.io.redirs {
+			dprintf("redirecting fd=%d to %s", fd, redir.path)
 			switch fd {
 			case 0:
-				f, err := os.Open(path)
+				f, err := os.Open(redir.path)
 				if err != nil {
 					return nil, err
 				}
 				cmd.Stdin = f
-			case 1:
-				f, err := os.Create(path)
+			case 1, 2:
+				flag := os.O_CREATE
+				if redir.append {
+					flag = os.O_APPEND
+				}
+				f, err := os.OpenFile(redir.path, flag, 0)
 				if err != nil {
 					return nil, err
 				}
-				cmd.Stdout = f
-			case 2:
-				f, err := os.Create(path)
-				if err != nil {
-					return nil, err
+				if fd == 1 {
+					cmd.Stdout = f
+				} else if fd == 2 {
+					cmd.Stderr = f
 				}
-				cmd.Stderr = f
 			default:
 				panic("TODO")
 			}

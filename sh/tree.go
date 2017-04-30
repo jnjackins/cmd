@@ -14,22 +14,26 @@ type treeNode struct {
 }
 
 type ioSpec struct {
-	redirs map[int]string
-	stdin  io.Reader
-	stdout io.Writer
-	stderr io.Writer
+	redirs  map[int]redir
+	pipeIn  io.Reader
+	pipeOut io.Writer
+}
+
+type redir struct {
+	path   string
+	append bool
 }
 
 func mkTree(typ int, children ...*treeNode) *treeNode {
-	return &treeNode{
+	t := &treeNode{
 		typ:      typ,
 		children: children,
 	}
-}
-
-func mkSimple(t *treeNode) *treeNode {
-	t.typ = SIMPLE
-	t.io = &ioSpec{redirs: make(map[int]string)}
+	switch typ {
+	case SIMPLE, PAREN, IF, FOR:
+		// "item" in yacc grammar
+		t.io = &ioSpec{redirs: make(map[int]redir)}
+	}
 	return t
 }
 
@@ -41,45 +45,57 @@ func mkLeaf(typ int, i int, s string) *treeNode {
 	}
 }
 
-func (n *treeNode) String() string {
+func (t *treeNode) redirect(fd int, path string) {
+	t.io.redirs[fd] = redir{path: path}
+}
+
+func (t *treeNode) String() string {
 	var s string
-	switch n.typ {
+	switch t.typ {
 	case ';':
 		sep := "; "
-		if n.children[0].typ == '&' {
+		if t.children[0].typ == '&' {
 			sep = " "
 		}
-		s = fmt.Sprintf("%v%s%v", n.children[0], sep, n.children[1])
+		s = fmt.Sprintf("%v%s%v", t.children[0], sep, t.children[1])
 	case '&':
-		s = fmt.Sprintf("%v &", n.children[0])
+		s = fmt.Sprintf("%v &", t.children[0])
 	case AND:
-		s = fmt.Sprintf("%v && %v", n.children[0], n.children[1])
+		s = fmt.Sprintf("%v && %v", t.children[0], t.children[1])
 	case OR:
-		s = fmt.Sprintf("%v || %v", n.children[0], n.children[1])
+		s = fmt.Sprintf("%v || %v", t.children[0], t.children[1])
 	case '|':
-		s = fmt.Sprintf("%v |%v", n.children[0], n.children[1])
+		s = fmt.Sprintf("%v |%v", t.children[0], t.children[1])
+	case IF:
+		s = fmt.Sprintf("if %v; then %v; fi", t.children[0], t.children[1])
+	case FOR:
+		s = fmt.Sprintf("for %v in %v; do %v; done", t.children[0], t.children[1], t.children[2])
 	case PAREN:
-		s = fmt.Sprintf("(%v)", n.children[0])
+		s = fmt.Sprintf("(%v)", t.children[0])
 	case SIMPLE:
-		s = n.children[0].string
-		for _, c := range n.children[1:] {
+		s = t.children[0].String()
+	case WORDS:
+		s = t.children[0].string
+		for _, c := range t.children[1:] {
 			s += " " + c.string
 		}
+	case WORD:
+		s = t.string
 	default:
 		panic("bad node type")
 	}
-	if n.io != nil {
-		for fd, path := range n.io.redirs {
-			var redir string
+	if t.io != nil {
+		for fd, redir := range t.io.redirs {
+			var c string
 			switch fd {
 			case 0:
-				redir = "<"
+				c = "<"
 			case 1:
-				redir = ">"
+				c = ">"
 			default:
-				redir = fmt.Sprintf("%d>", fd)
+				c = fmt.Sprintf("%d>", fd)
 			}
-			s += fmt.Sprintf(" %s%s", redir, path)
+			s += fmt.Sprintf(" %s%s", c, redir.path)
 		}
 	}
 	return s

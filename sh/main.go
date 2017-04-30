@@ -19,9 +19,7 @@ var (
 func main() {
 	flag.Parse()
 
-	if *debug {
-		shDebug = 3
-	}
+	// shDebug = 3
 
 	log.SetPrefix("sh: ")
 	log.SetFlags(0)
@@ -53,7 +51,7 @@ func main() {
 
 func dprintf(format string, args ...interface{}) {
 	if *debug {
-		log.Printf("debug: "+format, args...)
+		log.Printf("[ "+format+" ]", args...)
 	}
 }
 

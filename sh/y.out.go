@@ -535,13 +535,13 @@ shdefault:
 		//line syntax.y:43
 		{
 			shVAL.tree = shDollar[1].tree
-			shDollar[1].tree.io.redirs[shDollar[2].tree.int] = shDollar[3].tree.string
+			shDollar[1].tree.redirect(shDollar[2].tree.int, shDollar[3].tree.string)
 		}
 	case 17:
 		shDollar = shS[shpt-1 : shpt+1]
 		//line syntax.y:45
 		{
-			shVAL.tree = mkSimple(shDollar[1].tree)
+			shVAL.tree = mkTree(SIMPLE, shDollar[1].tree)
 		}
 	case 18:
 		shDollar = shS[shpt-3 : shpt+1]

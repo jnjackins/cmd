@@ -40,9 +40,9 @@ pipe    : redir
         | pipe '|' redir                         { $$ = mkTree('|', $1, $3) }
 
 redir   : item
-        | redir REDIR WORD                       { $$ = $1; $1.io.redirs[$2.int] = $3.string }
+        | redir REDIR WORD                       { $$ = $1; $1.redirect($2.int,$3.string) }
 
-item    : words                                  { $$ = mkSimple($1) }
+item    : words                                  { $$ = mkTree(SIMPLE, $1) }
         | '(' line ')'                           { $$ = mkTree(PAREN, $2) }
         | IF term THEN term FI                   { $$ = mkTree(IF, $2, $4) }
         | FOR WORD IN words ';' DO term DONE     { $$ = mkTree(FOR, $2, $4, $7) }
