@@ -23,11 +23,12 @@ const DONE = 57352
 const WORD = 57353
 const QUOTE = 57354
 const REDIR = 57355
-const SIMPLE = 57356
-const WORDS = 57357
-const PAREN = 57358
-const AND = 57359
-const OR = 57360
+const APPEND = 57356
+const SIMPLE = 57357
+const WORDS = 57358
+const PAREN = 57359
+const AND = 57360
+const OR = 57361
 
 var shToknames = [...]string{
 	"$end",
@@ -43,6 +44,7 @@ var shToknames = [...]string{
 	"WORD",
 	"QUOTE",
 	"REDIR",
+	"APPEND",
 	"SIMPLE",
 	"WORDS",
 	"PAREN",
@@ -65,7 +67,7 @@ var shExca = [...]int{
 	-1, 1,
 	1, -1,
 	-2, 0,
-	-1, 34,
+	-1, 36,
 	5, 3,
 	6, 3,
 	10, 3,
@@ -74,78 +76,78 @@ var shExca = [...]int{
 
 const shPrivate = 57344
 
-const shLast = 58
+const shLast = 60
 
 var shAct = [...]int{
 
-	24, 12, 8, 32, 10, 20, 21, 11, 6, 31,
-	22, 13, 14, 17, 18, 34, 16, 5, 17, 18,
-	15, 16, 9, 13, 14, 13, 14, 35, 27, 30,
-	43, 40, 41, 36, 37, 28, 29, 39, 33, 38,
-	22, 1, 42, 25, 3, 26, 4, 2, 3, 7,
-	4, 0, 19, 3, 0, 4, 0, 23,
+	25, 12, 8, 34, 10, 20, 6, 11, 13, 14,
+	23, 13, 14, 17, 18, 36, 16, 17, 18, 15,
+	16, 13, 14, 9, 21, 22, 33, 31, 37, 5,
+	42, 32, 28, 26, 3, 45, 39, 43, 3, 38,
+	41, 40, 23, 3, 44, 27, 4, 29, 30, 2,
+	4, 35, 1, 7, 19, 4, 0, 0, 0, 24,
 }
 var shPact = [...]int{
 
-	0, -1000, -1000, 1, 0, -16, -7, -1000, 14, 0,
-	0, 17, -1000, -1000, -1000, -1000, -1000, 0, 0, -1000,
-	0, -2, -1000, -20, 33, -4, 0, 25, -16, -16,
-	-7, -1000, -1000, 0, -1000, -1000, 14, 31, 12, -1000,
-	23, 0, 20, -1000,
+	0, -1000, -1000, -1, 0, -17, 11, -1000, -3, 0,
+	0, 21, -1000, -1000, -1000, -1000, -1000, 0, 0, -1000,
+	0, 20, 15, -1000, -21, 46, -5, 0, 31, -17,
+	-17, 11, -1000, -1000, -1000, 0, -1000, -1000, -3, 34,
+	10, -1000, 28, 0, 25, -1000,
 }
 var shPgo = [...]int{
 
-	0, 0, 47, 45, 43, 17, 8, 49, 2, 1,
-	41,
+	0, 0, 49, 45, 33, 29, 6, 53, 2, 1,
+	52,
 }
 var shR1 = [...]int{
 
 	0, 10, 10, 1, 1, 2, 2, 2, 3, 3,
-	4, 4, 4, 5, 5, 6, 6, 7, 7, 7,
-	7, 8, 8, 9, 9,
+	4, 4, 4, 5, 5, 6, 6, 6, 7, 7,
+	7, 7, 8, 8, 9, 9,
 }
 var shR2 = [...]int{
 
 	0, 0, 1, 2, 2, 1, 1, 2, 2, 2,
-	1, 3, 3, 1, 3, 1, 3, 1, 3, 5,
-	8, 1, 2, 1, 1,
+	1, 3, 3, 1, 3, 1, 3, 3, 1, 3,
+	5, 8, 1, 2, 1, 1,
 }
 var shChk = [...]int{
 
-	-1000, -10, -2, -4, -3, -5, -6, -7, -8, 22,
-	4, 7, -9, 11, 12, 19, 20, 17, 18, -2,
-	21, 13, -9, -2, -1, -4, -3, 11, -5, -5,
-	-6, 11, 23, 5, 19, -1, 8, -1, -8, 6,
-	19, 9, -1, 10,
+	-1000, -10, -2, -4, -3, -5, -6, -7, -8, 23,
+	4, 7, -9, 11, 12, 20, 21, 18, 19, -2,
+	22, 13, 14, -9, -2, -1, -4, -3, 11, -5,
+	-5, -6, 11, 11, 24, 5, 20, -1, 8, -1,
+	-8, 6, 20, 9, -1, 10,
 }
 var shDef = [...]int{
 
-	1, -2, 2, 5, 6, 10, 13, 15, 17, 0,
-	0, 0, 21, 23, 24, 8, 9, 0, 0, 7,
-	0, 0, 22, 0, 0, 0, 0, 0, 11, 12,
-	14, 16, 18, 0, -2, 4, 0, 0, 0, 19,
-	0, 0, 0, 20,
+	1, -2, 2, 5, 6, 10, 13, 15, 18, 0,
+	0, 0, 22, 24, 25, 8, 9, 0, 0, 7,
+	0, 0, 0, 23, 0, 0, 0, 0, 0, 11,
+	12, 14, 16, 17, 19, 0, -2, 4, 0, 0,
+	0, 20, 0, 0, 0, 21,
 }
 var shTok1 = [...]int{
 
 	1, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 20, 3,
-	22, 23, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 3, 3, 3, 3, 3, 19,
+	3, 3, 3, 3, 3, 3, 3, 3, 21, 3,
+	23, 24, 3, 3, 3, 3, 3, 3, 3, 3,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 20,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	3, 3, 3, 3, 21,
+	3, 3, 3, 3, 22,
 }
 var shTok2 = [...]int{
 
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-	12, 13, 14, 15, 16, 17, 18,
+	12, 13, 14, 15, 16, 17, 18, 19,
 }
 var shTok3 = [...]int{
 	0,
@@ -535,41 +537,48 @@ shdefault:
 		//line syntax.y:43
 		{
 			shVAL.tree = shDollar[1].tree
-			shDollar[1].tree.redirect(shDollar[2].tree.int, shDollar[3].tree.string)
+			shDollar[1].tree.redirect(shDollar[2].tree.int, shDollar[3].tree.string, false)
 		}
 	case 17:
+		shDollar = shS[shpt-3 : shpt+1]
+		//line syntax.y:44
+		{
+			shVAL.tree = shDollar[1].tree
+			shDollar[1].tree.redirect(shDollar[2].tree.int, shDollar[3].tree.string, true)
+		}
+	case 18:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:45
+		//line syntax.y:46
 		{
 			shVAL.tree = mkTree(SIMPLE, shDollar[1].tree)
 		}
-	case 18:
+	case 19:
 		shDollar = shS[shpt-3 : shpt+1]
-		//line syntax.y:46
+		//line syntax.y:47
 		{
 			shVAL.tree = mkTree(PAREN, shDollar[2].tree)
 		}
-	case 19:
+	case 20:
 		shDollar = shS[shpt-5 : shpt+1]
-		//line syntax.y:47
+		//line syntax.y:48
 		{
 			shVAL.tree = mkTree(IF, shDollar[2].tree, shDollar[4].tree)
 		}
-	case 20:
+	case 21:
 		shDollar = shS[shpt-8 : shpt+1]
-		//line syntax.y:48
+		//line syntax.y:49
 		{
 			shVAL.tree = mkTree(FOR, shDollar[2].tree, shDollar[4].tree, shDollar[7].tree)
 		}
-	case 21:
+	case 22:
 		shDollar = shS[shpt-1 : shpt+1]
-		//line syntax.y:50
+		//line syntax.y:51
 		{
 			shVAL.tree = mkTree(WORDS, shDollar[1].tree)
 		}
-	case 22:
+	case 23:
 		shDollar = shS[shpt-2 : shpt+1]
-		//line syntax.y:51
+		//line syntax.y:52
 		{
 			shVAL.tree = shDollar[1].tree
 			shDollar[1].tree.children = append(shDollar[1].tree.children, shDollar[2].tree)

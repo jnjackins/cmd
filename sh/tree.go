@@ -45,8 +45,11 @@ func mkLeaf(typ int, i int, s string) *treeNode {
 	}
 }
 
-func (t *treeNode) redirect(fd int, path string) {
-	t.io.redirs[fd] = redir{path: path}
+func (t *treeNode) redirect(fd int, path string, append bool) {
+	t.io.redirs[fd] = redir{
+		path:   path,
+		append: append,
+	}
 }
 
 func (t *treeNode) String() string {

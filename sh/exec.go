@@ -91,6 +91,8 @@ func execute(t *treeNode) int {
 			log.Print(err)
 			return -1
 		}
+		//defer closeFds(cmd)
+
 		dprintf("running simple command: %#v", cmd.Args)
 		if err := cmd.Run(); err != nil {
 			dprintf("run returned error: %v", err)
@@ -206,7 +208,7 @@ func (t *treeNode) mkCmd(args, vars []string) (*exec.Cmd, error) {
 		cmd.Stdin = t.io.pipeIn
 		cmd.Stdout = t.io.pipeOut
 		for fd, redir := range t.io.redirs {
-			dprintf("redirecting fd=%d to %s", fd, redir.path)
+			dprintf("redirecting fd=%d to %s (append=%v)", fd, redir.path, redir.append)
 			switch fd {
 			case 0:
 				f, err := os.Open(redir.path)
@@ -215,11 +217,13 @@ func (t *treeNode) mkCmd(args, vars []string) (*exec.Cmd, error) {
 				}
 				cmd.Stdin = f
 			case 1, 2:
-				flag := os.O_CREATE
+				flag := os.O_RDWR
 				if redir.append {
-					flag = os.O_APPEND
+					flag |= os.O_APPEND
+				} else {
+					flag |= os.O_CREATE
 				}
-				f, err := os.OpenFile(redir.path, flag, 0)
+				f, err := os.OpenFile(redir.path, flag, 0666)
 				if err != nil {
 					return nil, err
 				}

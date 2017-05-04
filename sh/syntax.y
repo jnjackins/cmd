@@ -4,7 +4,7 @@ package main
 %}
 
 %term IF THEN FI FOR IN DO DONE
-%term WORD QUOTE REDIR
+%term WORD QUOTE REDIR APPEND
 %term SIMPLE WORDS PAREN
 %left AND OR
 
@@ -13,7 +13,7 @@ package main
 }
 %type <tree> term line cmd list pipe redir item words word
 %type <tree> IF THEN FI FOR IN DO DONE
-%type <tree> WORD QUOTE REDIR
+%type <tree> WORD QUOTE REDIR APPEND
 
 %%
 
@@ -40,7 +40,8 @@ pipe    : redir
         | pipe '|' redir                         { $$ = mkTree('|', $1, $3) }
 
 redir   : item
-        | redir REDIR WORD                       { $$ = $1; $1.redirect($2.int,$3.string) }
+        | redir REDIR WORD                       { $$ = $1; $1.redirect($2.int,$3.string, false) }
+        | redir APPEND WORD                      { $$ = $1; $1.redirect($2.int,$3.string, true) }
 
 item    : words                                  { $$ = mkTree(SIMPLE, $1) }
         | '(' line ')'                           { $$ = mkTree(PAREN, $2) }

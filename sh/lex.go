@@ -45,13 +45,19 @@ func (x *shLex) Lex(yylval *shSymType) int {
 		x.peek = d
 		return int(c)
 
-	case '<', '>':
-		if c == '<' {
-			yylval.tree = mkLeaf(REDIR, 0, "")
-		} else if c == '>' {
-			yylval.tree = mkLeaf(REDIR, 1, "")
-		}
+	case '<':
+		yylval.tree = mkLeaf(REDIR, 0, "")
 		return REDIR
+
+	case '>':
+		if peek := x.next(false); peek == '>' {
+			yylval.tree = mkLeaf(APPEND, 1, "")
+			return APPEND
+		} else {
+			yylval.tree = mkLeaf(REDIR, 1, "")
+			x.peek = peek
+			return REDIR
+		}
 
 	case '\'':
 		var b bytes.Buffer
